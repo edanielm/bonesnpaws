@@ -69,20 +69,43 @@ class ImagenService:
     @staticmethod
     def _guardar_archivo(archivo):
         """Guarda el archivo subido en static/uploads/productos/ y devuelve su ruta publica."""
-        if current_app.config.get("EN_VERCEL"):
-            # En Vercel el disco es de solo lectura (y lo que se escribe en
-            # /tmp se pierde): la foto no sobreviviria. Se pide el enlace.
-            raise ValueError(
-                "En el sitio publicado no se pueden subir archivos: "
-                "pega el enlace directo de la imagen (ej. Imgur)."
-            )
         ImagenService._validar_archivo(archivo)
         nombre_seguro = secure_filename(archivo.filename)
+
+        if current_app.config.get("USAR_VERCEL_BLOB"):
+            return ImagenService._subir_a_blob(archivo, nombre_seguro)
+        if current_app.config.get("EN_VERCEL"):
+            # En Vercel el disco es de solo lectura (y lo que se escribe en
+            # /tmp se pierde): sin Blob conectado la foto no sobreviviria.
+            raise ValueError(
+                "No hay almacenamiento de fotos configurado: conecta un store "
+                "de Vercel Blob al proyecto o pega el enlace de la imagen."
+            )
+
         nombre_unico = f"{uuid.uuid4().hex}_{nombre_seguro}"
         carpeta = os.path.join(current_app.config["UPLOAD_FOLDER"], SUBCARPETA)
         os.makedirs(carpeta, exist_ok=True)
         archivo.save(os.path.join(carpeta, nombre_unico))
         return f"/static/uploads/{SUBCARPETA}/{nombre_unico}"
+
+    @staticmethod
+    def _subir_a_blob(archivo, nombre_seguro):
+        """Sube la foto a Vercel Blob y devuelve su URL publica."""
+        # Import local: el SDK solo hace falta cuando hay Blob configurado.
+        from vercel.blob import sync as blob
+
+        try:
+            resultado = blob.put_blob(
+                f"{SUBCARPETA}/{nombre_seguro}",
+                archivo.stream.read(),
+                access="public",
+                content_type=archivo.mimetype or None,
+                add_random_suffix=True,
+            )
+        except blob.BlobError as e:
+            current_app.logger.exception("Fallo la subida a Vercel Blob")
+            raise ValueError("No se pudo guardar la imagen. Intenta de nuevo.") from e
+        return resultado.url
 
     @staticmethod
     def _validar_url_externa(url_externa):
@@ -93,7 +116,17 @@ class ImagenService:
 
     @staticmethod
     def _eliminar_archivo_fisico(ruta_imagen):
-        """Borra el archivo del disco si la ruta es un upload local; ignora URLs externas."""
+        """Borra el archivo del disco (o de Vercel Blob) si es nuestro; ignora otras URLs."""
+        if ruta_imagen and ".blob.vercel-storage.com/" in ruta_imagen:
+            from vercel.blob import sync as blob
+            try:
+                blob.delete_blob(ruta_imagen)
+            except blob.BlobError:
+                # Igual que con el disco: un archivo huerfano no debe
+                # impedir borrar o reemplazar la foto en la base.
+                current_app.logger.warning("No se pudo borrar %s de Vercel Blob", ruta_imagen)
+            return
+
         prefijo = "/static/uploads/"
         if not ruta_imagen or not ruta_imagen.startswith(prefijo):
             return

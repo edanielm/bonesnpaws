@@ -40,6 +40,12 @@ class Config:
     # Vercel define VERCEL=1 en sus funciones. Alli el disco es de solo
     # lectura, asi que las fotos no se pueden guardar como archivo.
     EN_VERCEL = bool(os.getenv("VERCEL"))
+    # Si el proyecto tiene un store de Vercel Blob conectado, Vercel define
+    # alguna de estas variables y las fotos subidas se guardan alli en vez
+    # del disco (ver ImagenService._guardar_archivo).
+    USAR_VERCEL_BLOB = bool(
+        os.getenv("BLOB_READ_WRITE_TOKEN") or os.getenv("BLOB_STORE_ID")
+    )
 
     # ------------------------------------------------------------------
     # Correo saliente (recuperacion de contrasena)
