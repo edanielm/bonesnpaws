@@ -24,6 +24,7 @@ __pycache__/
 # .env.example como plantilla, nunca el .env real.
 # ---------------------------------------------------------------
 .env
+.env.vercel
 
 # ---------------------------------------------------------------
 # Respaldos de la base de datos (mysqldump)

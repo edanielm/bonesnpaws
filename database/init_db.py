@@ -179,6 +179,16 @@ def main(forzar=False):
 
     cursor = conn.cursor()
 
+    # MySQL en la nube (Aiven, por ejemplo) trae sql_require_primary_key
+    # encendido, y schema.sql crea las tablas sin llave primaria para
+    # agregarla despues con ALTER TABLE: sin apagarlo, todos los CREATE
+    # TABLE fallan. En MySQL local la variable ya esta apagada (o no
+    # existe, en MariaDB), asi que si falla se ignora.
+    try:
+        cursor.execute("SET SESSION sql_require_primary_key = 0")
+    except Error:
+        pass
+
     if not confirmar_reconstruccion(cursor, forzar):
         cursor.close()
         conn.close()
