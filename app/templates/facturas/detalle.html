@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% set numero = factura.numero_factura | folio(config.FACTURA_PREFIJO) %}
+{% set empresa = config.EMPRESA %}
+{% block title %}Factura {{ numero }} — Bones & Paws{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/factura.css') }}" />
+{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+
+        {# Aviso de compra exitosa: solo al llegar recien desde el checkout #}
+        {% if request.args.get('nueva') %}
+        <div class="alert alert-success" style="max-width:820px; margin:0 auto 1.5rem;">
+            {{ icono('check', 18) }}
+            <span>¡Compra registrada! Esta es tu factura {{ numero }}. Puedes descargarla o imprimirla.</span>
+        </div>
+        {% endif %}
+
+        {# ============ EL DOCUMENTO ============ #}
+        <article class="documento">
+
+            <header class="doc-encabezado">
+                <div class="doc-emisor">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="" />
+                    <div>
+                        <h1>{{ empresa.nombre }}</h1>
+                        <div class="datos">
+                            NIT {{ empresa.nit }}<br />
+                            {{ empresa.direccion }}<br />
+                            {{ empresa.ciudad }}<br />
+                            Tel. {{ empresa.telefono }} · {{ empresa.correo }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="doc-identificacion">
+                    <div class="tipo">Factura de venta</div>
+                    <div class="numero">{{ numero }}</div>
+                    <div class="fecha">
+                        Fecha de expedición<br />
+                        <strong>{{ factura.fecha.strftime('%d/%m/%Y') }}</strong>
+                    </div>
+                </div>
+            </header>
+
+            <hr class="doc-regla" />
+
+            <div class="doc-cliente">
+                <div class="rotulo">Facturar a</div>
+                <div class="campos">
+                    <div class="campo">
+                        <div class="k">Cliente</div>
+                        <div class="v">{{ cliente.nombre }} {{ cliente.apellido }}</div>
+                    </div>
+                    <div class="campo">
+                        <div class="k">Documento</div>
+                        <div class="v">{{ cliente.id_usuario }}</div>
+                    </div>
+                    <div class="campo">
+                        <div class="k">Correo</div>
+                        <div class="v">{{ cliente.correo }}</div>
+                    </div>
+                    <div class="campo">
+                        <div class="k">Teléfono</div>
+                        <div class="v">{{ cliente.telefono or '—' }}</div>
+                    </div>
+                    <div class="campo">
+                        <div class="k">Dirección de entrega</div>
+                        <div class="v">{{ cliente.direccion or '—' }}</div>
+                    </div>
+                    <div class="campo">
+                        <div class="k">Forma de pago</div>
+                        <div class="v">{{ factura.metodo_pago }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="doc-items">
+                <thead>
+                    <tr>
+                        <th class="col-num">#</th>
+                        <th>Descripción</th>
+                        <th class="col-cant">Cant.</th>
+                        <th class="col-valor">Valor unitario</th>
+                        <th class="col-valor">Valor total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in factura.detalles %}
+                    <tr>
+                        <td class="col-num">{{ loop.index }}</td>
+                        <td>{{ d.producto.nombre if d.producto else 'Producto retirado del catálogo' }}</td>
+                        <td class="col-cant">{{ d.cantidad }}</td>
+                        <td class="col-valor">{{ d.precio_unitario | pesos }}</td>
+                        <td class="col-valor">{{ d.subtotal_producto | pesos }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="doc-cierre">
+                <div class="doc-letras">
+                    <span class="rotulo">Son:</span> {{ factura.total | pesos_letras }}
+                </div>
+                <div class="doc-totales">
+                    <div class="linea"><span>Subtotal</span><span>{{ factura.subtotal | pesos }}</span></div>
+                    <div class="linea"><span>IVA (19%)</span><span>{{ factura.iva | pesos }}</span></div>
+                    <div class="linea"><span>Envío</span><span>{{ factura.costo_envio | pesos }}</span></div>
+                    <div class="linea total"><span>Total a pagar</span><span>{{ factura.total | pesos }}</span></div>
+                </div>
+            </div>
+
+            <footer class="doc-pie">
+                Gracias por comprar en {{ empresa.nombre }} · {{ empresa.web }}<br />
+                {{ config.FACTURA_NOTA }}
+            </footer>
+        </article>
+
+        {# ============ SEGUIMIENTO DEL ENVIO (no se imprime) ============
+           Va fuera del <article class="documento"> a proposito: la factura
+           es un documento contable cerrado, mientras que el estado del
+           envio cambia con el tiempo. #}
+        {% if factura.envio %}
+        <div class="card seguimiento">
+            <h3>{{ icono('ubicacion', 18) }} Seguimiento de tu pedido</h3>
+            <div class="seguimiento-datos">
+                <div>
+                    <span class="k">Guía</span>
+                    <span class="v"><code>{{ factura.envio.numero_guia }}</code></span>
+                </div>
+                <div>
+                    <span class="k">Transportadora</span>
+                    <span class="v">{{ factura.envio.transportadora.nombre if factura.envio.transportadora else '—' }}</span>
+                </div>
+                <div>
+                    <span class="k">Despachado</span>
+                    <span class="v">{{ factura.envio.fecha_envio.strftime('%d/%m/%Y') if factura.envio.fecha_envio else '—' }}</span>
+                </div>
+                <div>
+                    <span class="k">{{ 'Entregado el' if factura.envio.estado == 'Entregado' else 'Llega el' }}</span>
+                    <span class="v">
+                        {% if factura.envio.estado == 'Entregado' and factura.envio.fecha_entrega_real %}
+                            {{ factura.envio.fecha_entrega_real.strftime('%d/%m/%Y') }}
+                        {% elif factura.envio.fecha_entrega_estimada %}
+                            {{ factura.envio.fecha_entrega_estimada.strftime('%d/%m/%Y') }}
+                        {% else %}—{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            {# Los tres estados por los que pasa un pedido. El actual y los ya
+               cumplidos se marcan; los que faltan quedan apagados. #}
+            {% set orden = ['Pendiente', 'En camino', 'Entregado'] %}
+            {% set actual = orden.index(factura.envio.estado) if factura.envio.estado in orden else 0 %}
+            <ol class="seguimiento-pasos">
+                {% for paso in orden %}
+                <li class="{{ 'cumplido' if loop.index0 <= actual }}{{ ' actual' if loop.index0 == actual }}">
+                    <span class="punto">{% if loop.index0 <= actual %}{{ icono('check', 12) }}{% endif %}</span>
+                    <span class="etiqueta">{{ paso }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+        {% endif %}
+
+        {# ============ ACCIONES (no se imprimen) ============ #}
+        <div class="doc-acciones">
+            <a href="{{ url_for('factura.descargar_pdf', numero_factura=factura.numero_factura) }}"
+               class="btn btn-primary">
+                {{ icono('descargar', 17) }} Descargar PDF
+            </a>
+            <button type="button" class="btn btn-outline" onclick="window.print();">
+                {{ icono('impresora', 17) }} Imprimir
+            </button>
+            <a href="{{ url_for('factura.historial') }}" class="btn btn-outline">Mis compras</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

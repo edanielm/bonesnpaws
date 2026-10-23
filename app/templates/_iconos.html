@@ -1,0 +1,150 @@
+{#
+  _iconos.html — Set de iconos minimalistas de linea (stroke) del sitio.
+
+  Reemplaza los emojis que se usaban antes. Todos comparten el mismo
+  viewBox 24x24 y heredan el color del texto con `currentColor`, asi que
+  funcionan igual en modo claro y en modo oscuro sin duplicar codigo.
+
+  Uso:
+      {% from "_iconos.html" import icono %}
+      {{ icono('carrito') }}
+      {{ icono('huella', 32, 'relleno') }}
+#}
+{% macro icono(nombre, tam=20, clase='') -%}
+<svg class="ico {{ clase }}" width="{{ tam }}" height="{{ tam }}" viewBox="0 0 24 24"
+     fill="none" stroke="currentColor" stroke-width="1.6"
+     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+{%- if nombre == 'carrito' -%}
+  <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+  <path d="M2 3h2.2l2.3 12.1a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.3L21 7H5.2"/>
+{%- elif nombre == 'cerrar' -%}
+  <path d="M6 6l12 12M18 6L6 18"/>
+{%- elif nombre == 'buscar' -%}
+  <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
+{%- elif nombre == 'huella' -%}
+  <ellipse cx="12" cy="15.5" rx="5.2" ry="4.6" fill="currentColor" stroke="none"/>
+  <ellipse cx="5.6" cy="8.2" rx="2.3" ry="2.9" fill="currentColor" stroke="none"/>
+  <ellipse cx="11" cy="5.4" rx="2.3" ry="2.9" fill="currentColor" stroke="none"/>
+  <ellipse cx="16.6" cy="6.6" rx="2.3" ry="2.9" fill="currentColor" stroke="none"/>
+  <ellipse cx="20.4" cy="11.4" rx="2" ry="2.6" fill="currentColor" stroke="none"/>
+{%- elif nombre == 'perro' -%}
+  <path d="M4.5 8.5 3.8 4.6a.6.6 0 0 1 .9-.6l3.4 2.1"/>
+  <path d="M19.5 8.5l.7-3.9a.6.6 0 0 0-.9-.6l-3.4 2.1"/>
+  <path d="M4.5 8.5v4a7.5 7.5 0 0 0 15 0v-4"/>
+  <path d="M9.5 12.5h.01M14.5 12.5h.01"/>
+  <path d="M12 15.5v1.4"/><path d="M10.2 18.4a2.4 2.4 0 0 0 3.6 0"/>
+{%- elif nombre == 'gato' -%}
+  <path d="M4.4 10 3.5 4.3a.6.6 0 0 1 1-.55L8.7 7.2"/>
+  <path d="M19.6 10l.9-5.7a.6.6 0 0 0-1-.55L15.3 7.2"/>
+  <path d="M4.4 10v2.6a7.6 7.6 0 0 0 15.2 0V10"/>
+  <path d="M9.3 12.4h.01M14.7 12.4h.01"/>
+  <path d="M12 15.2v1.2"/><path d="M10.3 17.7a2.3 2.3 0 0 0 3.4 0"/>
+  <path d="M2.6 14.4H6M18 14.4h3.4"/>
+{%- elif nombre == 'recibo' -%}
+  <path d="M5 3.5h14v17l-2.3-1.5-2.3 1.5-2.4-1.5-2.4 1.5L7.3 19 5 20.5z"/>
+  <path d="M9 8h6M9 12h6M9 16h3"/>
+{%- elif nombre == 'ubicacion' -%}
+  <path d="M12 21.5s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z"/>
+  <circle cx="12" cy="10.2" r="2.6"/>
+{%- elif nombre == 'telefono' -%}
+  <path d="M21 16.9v2.6a1.7 1.7 0 0 1-1.9 1.7A17.4 17.4 0 0 1 3 4.9 1.7 1.7 0 0 1 4.7 3h2.6a1.7 1.7 0 0 1 1.7 1.5c.1.9.3 1.8.6 2.6a1.7 1.7 0 0 1-.4 1.8L8 10.1a14 14 0 0 0 5.9 5.9l1.2-1.2a1.7 1.7 0 0 1 1.8-.4c.8.3 1.7.5 2.6.6A1.7 1.7 0 0 1 21 16.9z"/>
+{%- elif nombre == 'correo' -%}
+  <rect x="2.5" y="4.5" width="19" height="15" rx="2.2"/>
+  <path d="m3.4 6.4 8.6 6 8.6-6"/>
+{%- elif nombre == 'flecha' -%}
+  <path d="M4.5 12h15M13.5 6l6 6-6 6"/>
+{%- elif nombre == 'check' -%}
+  <path d="M4.5 12.5 9.5 17.5 19.5 7"/>
+{%- elif nombre == 'menos' -%}
+  <path d="M5.5 12h13"/>
+{%- elif nombre == 'mas' -%}
+  <path d="M12 5.5v13M5.5 12h13"/>
+{%- elif nombre == 'sol' -%}
+  <circle cx="12" cy="12" r="4.2"/>
+  <path d="M12 2.2v2.4M12 19.4v2.4M4.1 4.1l1.7 1.7M18.2 18.2l1.7 1.7M2.2 12h2.4M19.4 12h2.4M4.1 19.9l1.7-1.7M18.2 5.8l1.7-1.7"/>
+{%- elif nombre == 'luna' -%}
+  <path d="M20.5 14.4A8.6 8.6 0 0 1 9.6 3.5a8.6 8.6 0 1 0 10.9 10.9z"/>
+{%- elif nombre == 'basura' -%}
+  <path d="M3.8 6h16.4M9 6V4.4a1.4 1.4 0 0 1 1.4-1.4h3.2A1.4 1.4 0 0 1 15 4.4V6"/>
+  <path d="M5.8 6v13.6A1.4 1.4 0 0 0 7.2 21h9.6a1.4 1.4 0 0 0 1.4-1.4V6"/>
+  <path d="M10 10.5v6M14 10.5v6"/>
+{%- elif nombre == 'editar' -%}
+  <path d="M11 4.5H5.4A2.4 2.4 0 0 0 3 6.9v11.7A2.4 2.4 0 0 0 5.4 21h11.7a2.4 2.4 0 0 0 2.4-2.4V13"/>
+  <path d="M17.9 2.9a2.1 2.1 0 0 1 3 3L12.4 14.4l-3.9.9.9-3.9z"/>
+{%- elif nombre == 'salir' -%}
+  <path d="M9.5 21H5.4A2.4 2.4 0 0 1 3 18.6V5.4A2.4 2.4 0 0 1 5.4 3h4.1"/>
+  <path d="M16 16.5 20.5 12 16 7.5M20.5 12h-11"/>
+{%- elif nombre == 'usuario' -%}
+  <circle cx="12" cy="8" r="4"/>
+  <path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>
+{%- elif nombre == 'usuarios' -%}
+  <circle cx="9.5" cy="8" r="3.6"/>
+  <path d="M2.8 20.4a6.7 6.7 0 0 1 13.4 0"/>
+  <path d="M16.4 4.7a3.6 3.6 0 0 1 0 6.9M18.2 14.6a6.7 6.7 0 0 1 3 5.8"/>
+{%- elif nombre == 'grafico' -%}
+  <path d="M3.5 20.5h17"/>
+  <path d="M7 20.5v-6M12 20.5V7M17 20.5v-9"/>
+{%- elif nombre == 'tendencia' -%}
+  <path d="M3 16.5 9.5 10l4 4L21 6.5"/>
+  <path d="M15.5 6.5H21v5.5"/>
+{%- elif nombre == 'caja' -%}
+  <path d="M20.5 8.2 12 3.4 3.5 8.2v7.6L12 20.6l8.5-4.8z"/>
+  <path d="m3.7 8.1 8.3 4.7 8.3-4.7M12 20.8v-8"/>
+{%- elif nombre == 'dinero' -%}
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M14.6 9a3 3 0 0 0-2.6-1.3c-1.6 0-2.6.9-2.6 2.1 0 3 5.4 1.6 5.4 4.5 0 1.3-1.1 2.2-2.8 2.2A3.2 3.2 0 0 1 9.2 15"/>
+  <path d="M12 6v12"/>
+{%- elif nombre == 'tarjeta' -%}
+  <rect x="2.5" y="5" width="19" height="14" rx="2.4"/>
+  <path d="M2.5 9.8h19"/>
+{%- elif nombre == 'alerta' -%}
+  <path d="M12 3.5 21.5 20H2.5z"/>
+  <path d="M12 9.5v4.4M12 17.2h.01"/>
+{%- elif nombre == 'reloj' -%}
+  <circle cx="12" cy="12" r="9"/><path d="M12 6.8V12l3.4 2"/>
+{%- elif nombre == 'ojo' -%}
+  <path d="M1.8 12S5.6 5.2 12 5.2 22.2 12 22.2 12 18.4 18.8 12 18.8 1.8 12 1.8 12z"/>
+  <circle cx="12" cy="12" r="3"/>
+{%- elif nombre == 'etiqueta' -%}
+  <path d="M20.6 12.6 12.4 20.8a1.9 1.9 0 0 1-2.7 0l-7-7A1.9 1.9 0 0 1 2.2 12V4.4a2 2 0 0 1 2-2H12a1.9 1.9 0 0 1 1.4.6l7.2 7.2a1.9 1.9 0 0 1 0 2.4z"/>
+  <path d="M7 7h.01"/>
+{%- elif nombre == 'impresora' -%}
+  <path d="M6.5 9.5V3.5h11v6"/>
+  <path d="M6.5 17.5H4.6A1.6 1.6 0 0 1 3 15.9v-4.8a1.6 1.6 0 0 1 1.6-1.6h14.8a1.6 1.6 0 0 1 1.6 1.6v4.8a1.6 1.6 0 0 1-1.6 1.6h-1.9"/>
+  <rect x="6.5" y="14.5" width="11" height="6" rx="0.8"/>
+{%- elif nombre == 'descargar' -%}
+  <path d="M12 3.5v11.5"/><path d="M7.5 10.5 12 15l4.5-4.5"/>
+  <path d="M3.8 16.5v2.6A1.9 1.9 0 0 0 5.7 21h12.6a1.9 1.9 0 0 0 1.9-1.9v-2.6"/>
+{%- elif nombre == 'escudo' -%}
+  <path d="M12 2.5 4.5 5.8v5.4c0 4.6 3.2 8.9 7.5 10.3 4.3-1.4 7.5-5.7 7.5-10.3V5.8z"/>
+  <path d="m8.8 11.9 2.2 2.2 4.2-4.4"/>
+{%- elif nombre == 'chat' -%}
+  <path d="M3.5 5.8A2.3 2.3 0 0 1 5.8 3.5h12.4a2.3 2.3 0 0 1 2.3 2.3v8.2a2.3 2.3 0 0 1-2.3 2.3H9.4l-4.4 3.7v-3.7H5.8a2.3 2.3 0 0 1-2.3-2.3z"/>
+  <path d="M8 9h8M8 12.5h5"/>
+{%- elif nombre == 'enviar' -%}
+  <path d="M4 12 20 4l-6.5 16-2.8-7L4 12z"/>
+{%- elif nombre == 'libro' -%}
+  <path d="M4 4.5h6a2.5 2.5 0 0 1 2 2.5 2.5 2.5 0 0 1 2-2.5h6v13h-6a2.5 2.5 0 0 0-2 2 2.5 2.5 0 0 0-2-2H4z"/>
+  <path d="M12 7v12"/>
+{%- elif nombre == 'menu' -%}
+  <path d="M4 7h16M4 12h16M4 17h16"/>
+{%- elif nombre == 'refrescar' -%}
+  <path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 4v5h-5"/>
+{%- elif nombre == 'candado' -%}
+  <rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/>
+  <path d="M8.2 10.5V7.8a3.8 3.8 0 0 1 7.6 0v2.7"/><path d="M12 14.4v2.4"/>
+{%- elif nombre == 'instagram' -%}
+  {# Marca de Instagram: el marco redondeado, el objetivo y el punto del flash #}
+  <rect x="3" y="3" width="18" height="18" rx="5.2"/>
+  <circle cx="12" cy="12" r="4.1"/>
+  <circle cx="17.2" cy="6.8" r="1.05" fill="currentColor" stroke="none"/>
+{%- elif nombre == 'gmail' -%}
+  {# Marca de Gmail: el sobre con la 'M' que forman sus dos pliegues #}
+  <rect x="2.5" y="5" width="19" height="14" rx="2.4"/>
+  <path d="M2.5 7.2 12 14l9.5-6.8"/>
+  <path d="M7 18.6V9.4M17 18.6V9.4"/>
+{%- else -%}
+  <circle cx="12" cy="12" r="9"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}

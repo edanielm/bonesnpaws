@@ -1,0 +1,94 @@
+{# Formulario de alta y edicion de personal (solo administrador).
+   Los valores vienen siempre en `datos`, no del objeto Empleado, para poder
+   repintar el formulario con lo que la persona acababa de escribir si el
+   guardado falla (correo repetido, etc.), igual que en producto_form.html. #}
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}{{ 'Nuevo' if es_nuevo else 'Editar' }} empleado — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container" style="max-width: 560px;">
+        <div class="section-head">
+            <div>
+                <h2>{{ 'Nuevo empleado' if es_nuevo else 'Editar empleado' }}</h2>
+                <p>{{ 'Crea una cuenta de acceso al panel para alguien del equipo.' if es_nuevo else 'Cambiar el rol quita o da permisos sin desactivar la cuenta.' }}</p>
+            </div>
+            <a href="{{ url_for('admin.empleados') }}" class="btn btn-outline">Cancelar</a>
+        </div>
+
+        <div class="card">
+            <form method="post">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input class="form-control" type="text" id="nombre" name="nombre" required value="{{ datos.nombre }}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="apellido">Apellido</label>
+                        <input class="form-control" type="text" id="apellido" name="apellido" required value="{{ datos.apellido }}" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="correo">Correo</label>
+                    <input class="form-control" type="email" id="correo" name="correo" required value="{{ datos.correo }}" />
+                    <small style="color:var(--text-low); font-size:0.78rem;">
+                        Es lo que usa para iniciar sesión en el panel. No puede repetirse con otra cuenta de personal.
+                    </small>
+                </div>
+                {% if es_nuevo %}
+                <div class="form-group">
+                    <label for="contrasena">Contraseña</label>
+                    <input class="form-control" type="password" id="contrasena" name="contrasena" required minlength="6" />
+                    <small style="color:var(--text-low); font-size:0.78rem;">Mínimo 6 caracteres. La persona la puede cambiar después desde su perfil.</small>
+                </div>
+                {% endif %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input class="form-control" type="tel" id="telefono" name="telefono" value="{{ datos.telefono }}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="id_rol">Rol</label>
+                        <select class="form-control" id="id_rol" name="id_rol" required>
+                            {% for rol in roles %}
+                            <option value="{{ rol.id_rol }}" {{ 'selected' if datos.id_rol == rol.id_rol }}>{{ rol.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">{{ 'Crear cuenta' if es_nuevo else 'Guardar cambios' }}</button>
+            </form>
+        </div>
+
+        {% if not es_nuevo and empleado %}
+        <div class="card" style="margin-top:1.5rem;">
+            <div class="section-head" style="margin-bottom:0;">
+                <div>
+                    <h3 style="font-size:1.05rem;">Acceso al panel</h3>
+                    <p style="font-size:0.85rem;">
+                        {% if empleado.activo %}Esta cuenta puede iniciar sesión y usar el panel.
+                        {% else %}Esta cuenta está desactivada: no puede iniciar sesión.{% endif %}
+                    </p>
+                </div>
+                {% if empleado.activo %}
+                    {% if empleado.id_empleado == session.id_empleado %}
+                    <span class="badge aviso">{{ icono('escudo', 12) }} No puedes desactivar tu propia cuenta</span>
+                    {% else %}
+                    <form method="post" action="{{ url_for('admin.desactivar_empleado', id_empleado=empleado.id_empleado) }}"
+                          onsubmit="return confirm('¿Quitarle el acceso al panel a {{ empleado.nombre }} {{ empleado.apellido }}?');">
+                        <button type="submit" class="btn btn-danger btn-sm">{{ icono('salir', 15) }} Desactivar acceso</button>
+                    </form>
+                    {% endif %}
+                {% else %}
+                    <form method="post" action="{{ url_for('admin.reactivar_empleado', id_empleado=empleado.id_empleado) }}">
+                        <button type="submit" class="btn btn-outline btn-sm">{{ icono('mas', 15) }} Reactivar acceso</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,58 @@
+# ---------------------------------------------------------------
+# Entornos virtuales
+# NUNCA se comparten: un venv guarda rutas absolutas del equipo que
+# lo creo, asi que al copiarlo a otra maquina queda roto. Cada quien
+# crea el suyo con "python instalar.py".
+# ---------------------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# ---------------------------------------------------------------
+# Bytecode de Python
+# Se regenera solo, y los .pyc de una version de Python no sirven
+# en otra (311 / 312 / 313...).
+# ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ---------------------------------------------------------------
+# Configuracion local
+# .env lleva la contrasena de MySQL de cada equipo. Se comparte
+# .env.example como plantilla, nunca el .env real.
+# ---------------------------------------------------------------
+.env
+
+# ---------------------------------------------------------------
+# Respaldos de la base de datos (mysqldump)
+# Son copias completas con datos personales de los clientes, y los
+# tomados ANTES de ejecutar database/migrar_contrasenas.py llevan
+# ademas las contrasenas en texto plano. Se quedan en el equipo.
+# ---------------------------------------------------------------
+respaldo_*.sql
+*_backup.sql
+
+# ---------------------------------------------------------------
+# Imagenes subidas desde el panel admin (viven solo en este disco)
+# ---------------------------------------------------------------
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+
+# ---------------------------------------------------------------
+# Herramientas y sistema operativo
+# ---------------------------------------------------------------
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# Originales pesados de las imagenes: utiles en este equipo, innecesarios
+# para ejecutar el proyecto (ver app/static/img/_originales/LEEME.txt)
+app/static/img/_originales/

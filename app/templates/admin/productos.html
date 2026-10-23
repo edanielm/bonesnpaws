@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% from "_paginacion.html" import paginacion_barra, paginacion_resumen %}
+{% block title %}Productos — Panel Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Catálogo</h2>
+                <p>
+                    {# Los totales son de todo el catalogo, no solo de esta pagina #}
+                    {{ total_activos }} producto(s) publicados{% if total_inactivos %}, {{ total_inactivos }} eliminado(s){% endif %}.
+                    <span class="pag-detalle">{{ paginacion_resumen(paginacion, 'resultado', 'resultados') }}</span>
+                </p>
+            </div>
+            <div style="display:flex; gap:0.8rem;">
+                <a href="{{ url_for('admin.crear_producto') }}" class="btn btn-primary">{{ icono('mas', 16) }} Nuevo producto</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">{{ icono('salir', 16) }} Cerrar sesión</a>
+            </div>
+        </div>
+
+        {% include "admin/_nav.html" %}
+
+        <div class="producto-toolbar">
+            <form class="search-box" method="get" action="{{ url_for('admin.productos') }}">
+                {{ icono('buscar', 18) }}
+                <input type="text" name="q" value="{{ buscar }}" placeholder="Buscar por nombre o código..." />
+            </form>
+            {% if buscar %}
+            <a href="{{ url_for('admin.productos') }}" class="btn btn-outline btn-sm">Limpiar</a>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="tabla-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Imagen</th><th>Código</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in productos %}
+                        <tr{% if not p.activo %} style="opacity:0.55;"{% endif %}>
+                            <td><img class="thumb" src="{{ p.imagen_url or img_placeholder }}" alt="{{ p.nombre }}" onerror="this.onerror=null;this.src='{{ img_placeholder }}';" /></td>
+                            <td><code class="codigo-producto">{{ p.codigo }}</code></td>
+                            <td>
+                                {{ p.nombre }}
+                                {% if not p.activo %}<span class="badge peligro">Eliminado</span>{% endif %}
+                            </td>
+                            <td>{{ p.categoria.nombre if p.categoria else '—' }}</td>
+                            <td>{{ p.precio | pesos }}</td>
+                            <td>
+                                {% if p.stock == 0 %}
+                                    <span class="badge peligro">Agotado</span>
+                                {% elif p.stock <= 5 %}
+                                    <span class="badge aviso">{{ p.stock }}</span>
+                                {% else %}
+                                    {{ p.stock }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="tabla-acciones">
+                                    <a href="{{ url_for('admin.editar_producto', id_producto=p.id_producto) }}" class="btn btn-outline btn-sm">
+                                        {{ icono('editar', 15) }} Editar
+                                    </a>
+                                    {% if p.activo %}
+                                    <form method="post" action="{{ url_for('admin.eliminar_producto', id_producto=p.id_producto) }}"
+                                          onsubmit="return confirm('¿Eliminar {{ p.nombre }}? Se ocultara de la tienda pero su registro se conserva.');">
+                                        <button type="submit" class="btn btn-danger btn-sm">{{ icono('basura', 15) }} Eliminar</button>
+                                    </form>
+                                    {% else %}
+                                    <form method="post" action="{{ url_for('admin.reactivar_producto', id_producto=p.id_producto) }}">
+                                        <button type="submit" class="btn btn-outline btn-sm">{{ icono('mas', 15) }} Reactivar</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="tabla-vacia">
+                                {% if buscar %}Ningún producto coincide con «{{ buscar }}».{% else %}Todavía no hay productos en el catálogo.{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{ paginacion_barra(paginacion, 'admin.productos') }}
+    </div>
+</section>
+{% endblock %}

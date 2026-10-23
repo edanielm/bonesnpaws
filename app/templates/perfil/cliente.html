@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Mi perfil — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Mi perfil</h2>
+                <p>{{ cliente.nombre }} {{ cliente.apellido }} — Cliente</p>
+            </div>
+            <a href="{{ url_for('factura.historial') }}" class="section-link">Ver mis compras {{ icono('flecha', 14) }}</a>
+        </div>
+
+        <div class="perfil-grid">
+            <div class="card">
+                <h3 class="card-titulo">Mis datos</h3>
+                <form id="perfil-form" method="post" action="{{ url_for('perfil.actualizar') }}">
+                    <div class="form-group">
+                        <label>Nombre completo</label>
+                        <input type="text" class="form-control" value="{{ cliente.nombre }} {{ cliente.apellido }}" disabled />
+                    </div>
+                    <div class="form-group">
+                        <label>Número de documento</label>
+                        <input type="text" class="form-control" value="{{ cliente.id_usuario }}" disabled />
+                    </div>
+                    <div class="form-group">
+                        <label>Correo electrónico</label>
+                        <input type="email" class="form-control" value="{{ cliente.correo }}" disabled />
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input type="tel" id="telefono" name="telefono" class="form-control" value="{{ cliente.telefono or '' }}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <input type="text" id="direccion" name="direccion" class="form-control" value="{{ cliente.direccion or '' }}" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3 class="card-titulo">Mi actividad</h3>
+                <ul class="perfil-datos">
+                    <li><span>Compras realizadas</span><strong>{{ resumen.num_compras }}</strong></li>
+                    <li><span>Total gastado</span><strong>{{ resumen.gastado | pesos }}</strong></li>
+                    <li><span>Compra promedio</span><strong>{{ resumen.ticket_promedio | pesos }}</strong></li>
+                    <li><span>Artículos comprados</span><strong>{{ resumen.unidades }}</strong></li>
+                    <li><span>En el carrito</span><strong>{{ resumen.items_carrito }}</strong></li>
+                </ul>
+
+                <div class="perfil-acciones">
+                    <a href="{{ url_for('factura.historial') }}" class="btn btn-outline btn-sm">
+                        {{ icono('recibo', 15) }} Mis facturas
+                    </a>
+                    <a href="{{ url_for('carrito.ver_carrito') }}" class="btn btn-outline btn-sm">
+                        {{ icono('carrito', 15) }} Mi carrito
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("perfil-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    // CABECERA_AJAX (app.js) le dice al servidor que esto es el JavaScript
+    // del sitio: sin ella, una sesion vencida responderia con una redireccion
+    // a la portada y resp.json() reventaria con un error de sintaxis.
+    const resp = await fetch(e.target.action, {
+        method: "POST", body: formData, headers: CABECERA_AJAX,
+    });
+    const data = await resp.json();
+    if (data.ok) mostrarToast("Perfil actualizado.");
+    else if (data.requiere_login) pedirInicioDeSesion(data.mensaje);
+    else mostrarToast(data.mensaje || "No se pudo actualizar el perfil.", true);
+});
+</script>
+{% endblock %}

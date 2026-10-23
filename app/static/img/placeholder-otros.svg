@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Producto de la categoria Otros">
+  <!-- Imagen de ejemplo de la categoria Otros.
+       Es un archivo local a proposito: el catalogo de prueba debe verse
+       igual en cualquier equipo, tambien sin conexion a internet. -->
+  <rect width="400" height="400" fill="#d7f0d1"/>
+  <g fill="#3f6b47" opacity="0.55">
+    <ellipse cx="200" cy="205" rx="58" ry="51"/>
+    <ellipse cx="132" cy="131" rx="26" ry="33"/>
+    <ellipse cx="190" cy="103" rx="26" ry="33"/>
+    <ellipse cx="248" cy="117" rx="26" ry="33"/>
+    <ellipse cx="281" cy="165" rx="22" ry="29"/>
+  </g>
+  <text x="200" y="320" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif"
+        font-size="34" font-weight="600" fill="#3f6b47">Otros</text>
+</svg>

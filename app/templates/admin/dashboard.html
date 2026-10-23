@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Estadísticas — Panel Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Panel administrador</h2>
+                <p>Hola, {{ admin_logueado }} — así van las ventas de la tienda.</p>
+            </div>
+            <div style="display:flex; gap:0.8rem;">
+                <a href="{{ url_for('admin.crear_producto') }}" class="btn btn-primary">{{ icono('mas', 16) }} Nuevo producto</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">{{ icono('salir', 16) }} Cerrar sesión</a>
+            </div>
+        </div>
+
+        {% include "admin/_nav.html" %}
+
+        {# ---------- Indicadores principales ---------- #}
+        <div class="stats-grid">
+            <div class="stat-card rosa">
+                <div class="stat-top">
+                    <span class="stat-label">Ventas totales</span>
+                    <span class="stat-icono">{{ icono('dinero', 18) }}</span>
+                </div>
+                <div class="stat-valor">{{ resumen.total_ventas | pesos }}</div>
+                <div class="stat-pie">{{ resumen.unidades_vendidas }} unidades despachadas</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-label">Facturas</span>
+                    <span class="stat-icono">{{ icono('recibo', 18) }}</span>
+                </div>
+                <div class="stat-valor">{{ resumen.num_facturas }}</div>
+                <div class="stat-pie">Ticket promedio {{ resumen.ticket_promedio | pesos }}</div>
+            </div>
+
+            <div class="stat-card rosa">
+                <div class="stat-top">
+                    <span class="stat-label">Ventas del mes</span>
+                    <span class="stat-icono">{{ icono('tendencia', 18) }}</span>
+                </div>
+                <div class="stat-valor">{{ resumen.ventas_mes | pesos }}</div>
+                <div class="stat-pie">
+                    {% if resumen.variacion_mes is none %}
+                        Sin ventas el mes anterior
+                    {% else %}
+                        <span class="badge {{ 'exito' if resumen.variacion_mes >= 0 else 'peligro' }}">
+                            {{ '+' if resumen.variacion_mes >= 0 }}{{ resumen.variacion_mes }}%
+                        </span>
+                        frente al mes anterior
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-label">Clientes</span>
+                    <span class="stat-icono">{{ icono('usuarios', 18) }}</span>
+                </div>
+                <div class="stat-valor">{{ resumen.num_clientes }}</div>
+                <div class="stat-pie">
+                    <a href="{{ url_for('admin.usuarios') }}" class="section-link">Gestionar cuentas {{ icono('flecha', 13) }}</a>
+                </div>
+            </div>
+        </div>
+
+        {# ---------- Ventas por mes + metodos de pago ---------- #}
+        <div class="panel-doble">
+            <div class="card">
+                <h3 style="margin-bottom:0.3rem;">Ventas de los últimos 6 meses</h3>
+                <p style="color:var(--text-low); font-size:0.82rem; margin-bottom:0.5rem;">Total facturado por mes.</p>
+                <div class="chart-barras">
+                    {% for punto in serie_meses %}
+                    <div class="col" title="{{ punto.etiqueta }} {{ punto.anio }}: {{ punto.total | pesos }} · {{ punto.facturas }} factura(s)">
+                        <div class="barra-zona">
+                            <div class="barra" style="height: {{ punto.pct }}%;">
+                                {% if punto.total %}<span class="valor">{{ punto.total | pesos }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <span class="mes">{{ punto.etiqueta }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:1rem;">Por método de pago</h3>
+                {% if metodos_pago %}
+                <div class="lista-barras">
+                    {% for m in metodos_pago %}
+                    <div>
+                        <div class="fila-label">
+                            <span>{{ m.metodo }} <span style="color:var(--text-low);">· {{ m.facturas }}</span></span>
+                            <strong>{{ m.total | pesos }}</strong>
+                        </div>
+                        <div class="pista"><div class="relleno" style="width: {{ m.pct }}%;"></div></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="tabla-vacia">Todavía no hay pagos registrados.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ---------- Top productos + estado del inventario ---------- #}
+        <div class="panel-doble">
+            <div class="card">
+                <h3 style="margin-bottom:1rem;">Productos más vendidos</h3>
+                {% if top_productos %}
+                <div class="lista-barras">
+                    {% for p in top_productos %}
+                    <div>
+                        <div class="fila-label">
+                            <span>{{ p.nombre }}</span>
+                            <strong>{{ p.unidades }} u. · {{ p.ingresos | pesos }}</strong>
+                        </div>
+                        <div class="pista"><div class="relleno azul" style="width: {{ p.pct }}%;"></div></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="tabla-vacia">Aún no se ha vendido ningún producto.</p>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:1rem;">Inventario</h3>
+                <div class="dato-lista">
+                    <div class="dato">
+                        <div class="k">{{ icono('caja', 13) }} En catálogo</div>
+                        <div class="v">{{ resumen.num_productos }} productos</div>
+                    </div>
+                    <div class="dato">
+                        <div class="k">{{ icono('alerta', 13) }} Stock bajo</div>
+                        <div class="v">
+                            {{ resumen.productos_stock_bajo }}
+                            {% if resumen.productos_stock_bajo %}<span class="badge aviso">≤ 5 unid.</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="dato">
+                        <div class="k">{{ icono('alerta', 13) }} Agotados</div>
+                        <div class="v">
+                            {{ resumen.productos_agotados }}
+                            {% if resumen.productos_agotados %}<span class="badge peligro">reponer</span>{% endif %}
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ url_for('admin.productos') }}" class="btn btn-outline btn-sm" style="margin-top:1.2rem;">
+                    {{ icono('caja', 15) }} Gestionar catálogo
+                </a>
+            </div>
+        </div>
+
+        {# ---------- Ultimas facturas ---------- #}
+        <div class="card">
+            <h3 style="margin-bottom:1rem;">Facturas recientes</h3>
+            <div class="tabla-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>N° Factura</th><th>Fecha</th><th>Cliente</th><th>Método</th><th>Total</th><th>PDF</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for r in facturas %}
+                        <tr>
+                            <td><a href="{{ url_for('factura.detalle', numero_factura=r.factura.numero_factura) }}" class="section-link">{{ r.factura.numero_factura | folio(config.FACTURA_PREFIJO) }}</a></td>
+                            <td>{{ r.factura.fecha.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.usuario_detalle', id_usuario=r.cliente.id_usuario) }}" class="section-link">
+                                    {{ r.cliente.nombre }} {{ r.cliente.apellido }}
+                                </a>
+                            </td>
+                            <td>{{ r.factura.metodo_pago }}</td>
+                            <td>{{ r.factura.total | pesos }}</td>
+                            <td><a href="{{ url_for('factura.descargar_pdf', numero_factura=r.factura.numero_factura) }}" class="section-link" title="Descargar PDF">{{ icono('descargar', 15) }}</a></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="tabla-vacia">Todavía no hay ventas registradas.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,204 @@
+/* ============================================================
+   factura.css — Documento de factura de venta
+   ============================================================
+
+   Dos presentaciones del mismo HTML:
+
+   1. En pantalla: una "hoja" blanca centrada sobre el fondo del sitio,
+      que se ve igual en modo claro y en modo oscuro (el papel siempre
+      es blanco, como en una factura real).
+
+   2. Al imprimir (@media print, al final del archivo): se quitan la
+      barra de navegacion, el pie del sitio y los botones, y queda solo
+      el documento. Asi el "Guardar como PDF" del navegador produce una
+      hoja limpia, sin adornos de la web.
+   ============================================================ */
+
+/* La hoja siempre es clara, aunque el sitio este en modo oscuro:
+   una factura en negro no se entiende ni se imprime bien. */
+.documento {
+    --doc-texto: #1a2c3f;
+    --doc-tenue: #7a8c9e;
+    --doc-linea: #d3e0ec;
+    --doc-azul: #4d86b8;
+    --doc-azul-suave: #e8f0f8;
+    --doc-rosa: #e4718f;
+
+    background: #ffffff;
+    color: var(--doc-texto);
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 2.6rem 2.8rem 2.2rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-soft);
+}
+
+/* ---------- Encabezado ---------- */
+.doc-encabezado {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 2rem; flex-wrap: wrap;
+}
+.doc-emisor { display: flex; align-items: flex-start; gap: 0.9rem; }
+.doc-emisor img { width: 58px; height: 58px; object-fit: contain; }
+.doc-emisor h1 {
+    font-size: 1.35rem; color: var(--doc-azul);
+    margin-bottom: 0.25rem; line-height: 1.2;
+}
+.doc-emisor .datos {
+    font-size: 0.78rem; color: var(--doc-tenue); line-height: 1.55;
+}
+
+.doc-identificacion { text-align: right; }
+.doc-identificacion .tipo {
+    font-size: 0.82rem; font-weight: 600; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--doc-texto);
+}
+.doc-identificacion .numero {
+    font-family: "Baloo 2", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    font-size: 1.7rem; font-weight: 700; color: var(--doc-rosa);
+    line-height: 1.15; margin: 0.1rem 0 0.5rem;
+}
+.doc-identificacion .fecha { font-size: 0.78rem; color: var(--doc-tenue); line-height: 1.5; }
+.doc-identificacion .fecha strong { color: var(--doc-texto); font-weight: 600; }
+
+.doc-regla { height: 2px; background: var(--doc-azul); margin: 1.4rem 0 1.5rem; border: none; }
+
+/* ---------- Datos del comprador ---------- */
+.doc-cliente {
+    background: var(--doc-azul-suave);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem 1.1rem;
+    margin-bottom: 1.6rem;
+}
+.doc-cliente .rotulo {
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--doc-azul); margin-bottom: 0.6rem;
+}
+.doc-cliente .campos {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.7rem 1.6rem;
+}
+.doc-cliente .campo .k {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--doc-tenue); margin-bottom: 0.1rem;
+}
+.doc-cliente .campo .v { font-size: 0.87rem; color: var(--doc-texto); word-break: break-word; }
+
+/* ---------- Detalle de productos ---------- */
+table.doc-items { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+table.doc-items thead th {
+    background: var(--doc-azul); color: #ffffff;
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; text-align: left;
+    padding: 0.65rem 0.7rem;
+}
+table.doc-items thead th:first-child { border-radius: 5px 0 0 0; }
+table.doc-items thead th:last-child { border-radius: 0 5px 0 0; }
+table.doc-items tbody td {
+    padding: 0.65rem 0.7rem;
+    border-bottom: 1px solid var(--doc-linea);
+    color: var(--doc-texto);
+}
+table.doc-items tbody tr:nth-child(even) { background: #f7fafd; }
+table.doc-items .col-num { width: 34px; text-align: center; color: var(--doc-tenue); }
+table.doc-items .col-cant { width: 60px; text-align: center; }
+table.doc-items .col-valor { width: 118px; text-align: right; white-space: nowrap; }
+
+/* ---------- Cierre: monto en letras + totales ---------- */
+.doc-cierre {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 2rem; margin-top: 1.5rem; flex-wrap: wrap;
+}
+.doc-letras {
+    flex: 1; min-width: 230px; font-size: 0.82rem;
+    color: var(--doc-texto); line-height: 1.5;
+}
+.doc-letras .rotulo { color: var(--doc-tenue); }
+
+.doc-totales { width: 270px; }
+.doc-totales .linea {
+    display: flex; justify-content: space-between; gap: 1.5rem;
+    font-size: 0.85rem; color: var(--doc-tenue); padding: 0.28rem 0;
+}
+.doc-totales .linea span:last-child { color: var(--doc-texto); }
+.doc-totales .linea.total {
+    border-top: 1.5px solid var(--doc-linea);
+    margin-top: 0.5rem; padding-top: 0.7rem;
+    font-size: 1.05rem; font-weight: 700; color: var(--doc-rosa);
+}
+.doc-totales .linea.total span:last-child { color: var(--doc-rosa); }
+
+/* ---------- Pie del documento ---------- */
+.doc-pie {
+    margin-top: 2.2rem; padding-top: 1rem;
+    border-top: 1px solid var(--doc-linea);
+    text-align: center; font-size: 0.74rem;
+    color: var(--doc-tenue); line-height: 1.6;
+}
+
+/* ---------- Barra de acciones (no se imprime) ---------- */
+.doc-acciones {
+    display: flex; gap: 0.8rem; flex-wrap: wrap;
+    justify-content: center; margin-top: 1.8rem;
+}
+
+@media (max-width: 640px) {
+    .documento { padding: 1.6rem 1.2rem; }
+    .doc-identificacion { text-align: left; }
+    .doc-totales { width: 100%; }
+}
+
+/* ============================================================
+   IMPRESION — lo que ve el navegador al hacer "Guardar como PDF"
+   ============================================================ */
+@media print {
+    /* Fuera todo lo que es del sitio y no del documento */
+    .navbar, footer, .doc-acciones, .skip-link,
+    #toast, #login-overlay, .alert, .section-head,
+    /* El seguimiento del envio cambia con el tiempo; la factura impresa no */
+    .seguimiento, #chatbot-widget {
+        display: none !important;
+    }
+
+    /* Papel blanco, tinta negra, sin margenes del sitio */
+    html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        display: block !important;
+    }
+    main, section, .container {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .documento {
+        max-width: none;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    /* Los navegadores omiten fondos al imprimir salvo que se pidan:
+       sin esto, el encabezado de la tabla saldria en blanco sobre blanco. */
+    table.doc-items thead th,
+    table.doc-items tbody tr:nth-child(even),
+    .doc-cliente,
+    .doc-regla {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Que no se parta una fila de producto entre dos hojas */
+    table.doc-items { page-break-inside: auto; }
+    table.doc-items tr { page-break-inside: avoid; page-break-after: auto; }
+    table.doc-items thead { display: table-header-group; }
+    .doc-cierre, .doc-pie { page-break-inside: avoid; }
+
+    @page { margin: 16mm 14mm; }
+}

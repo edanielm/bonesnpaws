@@ -1,0 +1,279 @@
+{% from "_iconos.html" import icono %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Bones & Paws{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.png') }}" />
+    {# tema.js va antes del CSS y sin defer: fija data-theme en <html> para que no haya parpadeo #}
+    <script src="{{ url_for('static', filename='js/tema.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+    {% block extra_css %}{% endblock %}
+</head>
+<body {% if request.args.get('login') %}data-abrir-login-auto="1"{% endif %}>
+<a href="#contenido" class="skip-link">Saltar al contenido</a>
+
+{# Los enlaces y las acciones de sesion se escriben una sola vez en estas
+   macros y se usan dos veces: en la barra (pantalla ancha) y en el panel
+   desplegable (telefono). Antes el menu simplemente se ocultaba por debajo
+   de 640 px y no habia nada que lo reemplazara: desde un telefono no se
+   podia llegar a Productos, Categorias, Acerca de ni Contacto. #}
+{% macro enlaces_nav() %}
+    <li><a href="{{ url_for('main.index') }}" class="{{ 'activo' if request.endpoint == 'main.index' }}">Inicio</a></li>
+    <li><a href="{{ url_for('main.productos') }}" class="{{ 'activo' if request.endpoint in ['main.productos','main.producto_detalle'] }}">Productos</a></li>
+    <li><a href="{{ url_for('main.categorias') }}" class="{{ 'activo' if request.endpoint == 'main.categorias' }}">Categorías</a></li>
+    <li><a href="{{ url_for('main.acerca') }}" class="{{ 'activo' if request.endpoint == 'main.acerca' }}">Acerca de</a></li>
+    <li><a href="{{ url_for('main.contacto') }}" class="{{ 'activo' if request.endpoint == 'main.contacto' }}">Contacto</a></li>
+{% endmacro %}
+
+{% macro acciones_sesion() %}
+    {% if usuario_logueado %}
+        {# Mismo chip para todos: lleva a /perfil, que ya sabe que mostrarle a cada quien #}
+        <a href="{{ url_for('perfil.ver') }}" class="user-chip">
+            <span class="avatar">{{ usuario_logueado[0] | upper }}</span>
+            {{ usuario_logueado }}
+            {% if es_staff %}<span class="badge {{ 'exito' if es_administrador else 'aviso' }}">{{ rol_sesion }}</span>{% endif %}
+        </a>
+        {% if es_staff %}
+        <a href="{{ url_for('admin.dashboard') if es_administrador else url_for('admin.productos') }}" class="btn btn-outline btn-sm">
+            {{ icono('grafico', 16) }} Panel
+        </a>
+        {% endif %}
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">{{ icono('salir', 16) }} Salir</a>
+    {% else %}
+        <button class="btn btn-outline btn-sm" data-abrir-login="login">Iniciar sesión</button>
+        <button class="btn btn-primary btn-sm" data-abrir-login="registro">Regístrate</button>
+    {% endif %}
+{% endmacro %}
+
+<nav class="navbar">
+    <div class="container">
+        <a href="{{ url_for('main.index') }}" class="brand">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Bones &amp; Paws" class="brand-logo" />
+            <span class="bones">Bones</span><span class="amp">&amp;</span><span class="bones">Paws</span>
+        </a>
+        <ul class="nav-links">{{ enlaces_nav() }}</ul>
+        <div class="nav-actions">
+            <button type="button" id="tema-toggle" class="tema-toggle" aria-label="Cambiar modo de color" title="Cambiar modo de color">
+                <span class="ico-luna">{{ icono('luna') }}</span>
+                <span class="ico-sol">{{ icono('sol') }}</span>
+            </button>
+            <a href="{{ url_for('carrito.ver_carrito') }}" class="nav-icon-btn" aria-label="Carrito">
+                {{ icono('carrito') }}
+                {% if id_usuario_sesion %}
+                <span class="cart-badge" id="cart-badge" style="display:none;">0</span>
+                {% endif %}
+            </a>
+            {# En pantalla angosta este bloque se esconde y su contenido
+               reaparece dentro del panel desplegable. #}
+            <div class="nav-sesion">{{ acciones_sesion() }}</div>
+            <button type="button" id="nav-toggle" class="nav-toggle"
+                    aria-label="Abrir el menú" aria-expanded="false" aria-controls="nav-movil">
+                <span class="ico-menu-abrir">{{ icono('menu', 22) }}</span>
+                <span class="ico-menu-cerrar">{{ icono('cerrar', 22) }}</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="nav-movil" class="nav-movil" hidden>
+        <div class="container">
+            <ul class="nav-movil-links">{{ enlaces_nav() }}</ul>
+            <div class="nav-movil-sesion">{{ acciones_sesion() }}</div>
+        </div>
+    </div>
+</nav>
+
+<main id="contenido">
+    {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+        <div class="container" style="padding-top: 1.2rem;">
+            {% for categoria, mensaje in mensajes %}
+                {% set clase = categoria if categoria in ['success','danger','warning'] else 'warning' %}
+                <div class="alert alert-{{ clase }}">
+                    {{ icono('check' if clase == 'success' else 'alerta', 18) }}
+                    <span>{{ mensaje }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <div class="brand" style="font-size:1.2rem; margin-bottom:0.6rem;">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Bones &amp; Paws" class="brand-logo" />
+                    <span class="bones">Bones</span><span class="amp">&amp;</span><span class="bones">Paws</span>
+                </div>
+                <p class="tagline">Todo lo que tu mascota necesita, curado con cariño para hogares en toda Colombia.</p>
+            </div>
+            <div>
+                <h4>Tienda</h4>
+                <ul>
+                    <li><a href="{{ url_for('main.productos') }}">Productos</a></li>
+                    <li><a href="{{ url_for('main.categorias') }}">Categorías</a></li>
+                    <li><a href="{{ url_for('carrito.ver_carrito') }}">Carrito</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Ayuda</h4>
+                <ul>
+                    {# El manual va de primero y abre en otra pestaña: es un PDF,
+                       y si reemplazara la pagina la persona perderia donde iba.
+                       No pide sesion a proposito (ver main_routes.manual). #}
+                    <li>
+                        <a href="{{ url_for('main.manual') }}" target="_blank" rel="noopener"
+                           class="enlace-manual">
+                            {{ icono('libro', 15) }} Manual de usuario (PDF)
+                        </a>
+                    </li>
+                    <li><a href="{{ url_for('main.acerca') }}">Acerca de</a></li>
+                    <li><a href="{{ url_for('main.contacto') }}">Contacto</a></li>
+                    {# Sin sesion, requiere_staff devuelve a la portada con el modal de login abierto #}
+                    <li><a href="{{ url_for('admin.productos') }}">Panel del equipo</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">© {{ 2026 }} Bones & Paws — Proyecto académico Flask MVC.</div>
+    </div>
+</footer>
+
+<!-- ===== Modal flotante de login (Gato Negro Animado) =====
+     role="dialog" + aria-modal le dicen al lector de pantalla que esto es
+     una ventana y que lo de atras no cuenta mientras este abierta;
+     aria-labelledby hace que la anuncie por su titulo. El foco y la tecla
+     Escape los maneja login.js. -->
+<div id="login-overlay" role="dialog" aria-modal="true" aria-labelledby="form-title" aria-hidden="true">
+    <div class="login-container">
+        <button type="button" id="login-cerrar" class="login-cerrar" aria-label="Cerrar">{{ icono('cerrar', 18) }}</button>
+        <form id="auth-form">
+            <h2 id="form-title">Iniciar Sesión</h2>
+            <div id="form-error" class="form-error" role="alert" aria-live="polite"></div>
+
+            <div class="reg-only">
+                <div class="input-row">
+                    <input type="text" id="names" name="names" placeholder="Nombres" />
+                    <input type="text" id="lastnames" name="lastnames" placeholder="Apellidos" />
+                </div>
+                <input type="text" id="id_usuario" name="id_usuario" placeholder="Número de documento" />
+                <div class="input-row">
+                    <input type="tel" id="phone" name="phone" placeholder="Teléfono" />
+                    <input type="text" id="address" name="address" placeholder="Dirección" />
+                </div>
+            </div>
+
+            <div class="recuperar-only" style="display:none;">
+                <input type="text" id="recuperar-documento" placeholder="Número de documento" />
+            </div>
+
+            <input type="text" id="email" name="email" placeholder="Correo electrónico" />
+
+            <div class="login-only">
+                <input type="password" id="password" name="password" placeholder="Contraseña" />
+            </div>
+            <div class="reg-only">
+                <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirmar Contraseña" />
+            </div>
+
+            {# Paso 2 de "olvide mi contraseña": el codigo que llego al correo
+               y la contrasena nueva. El correo y el documento siguen en el
+               formulario (ocultos) porque el servidor los necesita para saber
+               de quien es el codigo. #}
+            <div class="codigo-only">
+                <p class="codigo-aviso" id="codigo-aviso"></p>
+                <input type="text" id="recuperar-codigo" name="codigo" inputmode="numeric"
+                       maxlength="6" autocomplete="one-time-code"
+                       placeholder="Código de 6 dígitos" />
+                <input type="password" id="recuperar-password" placeholder="Nueva contraseña" />
+                <input type="password" id="recuperar-password-confirm" placeholder="Confirmar nueva contraseña" />
+            </div>
+
+            {# ===== Captcha =====
+               La imagen la dibuja el servidor (/auth/captcha) y la respuesta
+               correcta nunca llega al navegador. Se muestra siempre al
+               registrarse y al pedir un codigo de recuperacion, y en el login
+               solo cuando el servidor lo pide tras varios fallos. #}
+            <div class="captcha-bloque" id="captcha-bloque" hidden>
+                <label class="captcha-label" for="captcha">Escribe el código de la imagen</label>
+                <div class="captcha-fila">
+                    <img id="captcha-img" class="captcha-img" width="150" height="50"
+                         alt="Código de verificación dibujado en una imagen" />
+                    <button type="button" id="captcha-recargar" class="captcha-recargar"
+                            aria-label="Generar otro código de imagen" title="Otro código">
+                        {{ icono('refrescar', 16) }}
+                    </button>
+                </div>
+                <input type="text" id="captcha" name="captcha" maxlength="5"
+                       autocomplete="off" autocapitalize="characters" spellcheck="false"
+                       placeholder="Código de la imagen" />
+            </div>
+
+            <button id="submit-btn" type="submit">Entrar</button>
+
+            <p class="toggle-text login-only">
+                <a href="#" id="olvide-password">¿Olvidaste tu contraseña?</a>
+            </p>
+            <p class="toggle-text codigo-only">
+                <a href="#" id="codigo-reenviar">¿No te llegó? Pedir otro código</a>
+            </p>
+            <p class="toggle-text">
+                <span id="toggle-msg">¿No tienes cuenta?</span>
+                <a href="#" id="toggle-form">Regístrate</a>
+            </p>
+        </form>
+
+        <div class="cat-container">
+            <div class="ear-l"></div>
+            <div class="ear-r"></div>
+            <div class="cat-face">
+                <div class="eye-l"><div class="iris-l"><div class="eyeball-l"></div></div></div>
+                <div class="eye-r"><div class="iris-r"><div class="eyeball-r"></div></div></div>
+                <div class="nose"></div>
+                <div class="mouth"></div>
+                <div class="whiskers-l"><span></span><span></span><span></span></div>
+                <div class="whiskers-r"><span></span><span></span><span></span></div>
+            </div>
+            <div class="hand-l"></div>
+            <div class="hand-r"></div>
+        </div>
+        <div class="paw-l"></div>
+        <div class="paw-r"></div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ===== Chat de atencion (burbuja flotante desplegable) ===== -->
+<div id="chatbot-widget">
+    <div id="chatbot-panel" class="chatbot-panel">
+        <div class="chatbot-header">
+            <span>{{ icono('huella', 18) }} Chantonieta</span>
+            <button type="button" id="chatbot-cerrar" aria-label="Cerrar chat">{{ icono('cerrar', 16) }}</button>
+        </div>
+        <div id="chatbot-mensajes" class="chatbot-mensajes"></div>
+        <form id="chatbot-form" class="chatbot-form">
+            <input type="text" id="chatbot-input" placeholder="Escribe tu pregunta..." autocomplete="off" maxlength="300" />
+            <button type="submit" aria-label="Enviar">{{ icono('enviar', 18) }}</button>
+        </form>
+    </div>
+    <button type="button" id="chatbot-abrir" class="chatbot-boton" aria-label="Abrir chat con Chantonieta" aria-expanded="false">
+        <span class="ico-chat-abrir">
+            <img src="{{ url_for('static', filename='img/chatbot-icono.png') }}" alt="" width="34" height="34" />
+        </span>
+        <span class="ico-chat-cerrar">{{ icono('cerrar', 22) }}</span>
+    </button>
+</div>
+
+<script src="{{ url_for('static', filename='js/password.js') }}"></script>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

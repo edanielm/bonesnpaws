@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% from "_paginacion.html" import paginacion_barra, paginacion_resumen %}
+{% block title %}Productos — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Nuestros productos</h2>
+                <p>{{ paginacion_resumen(paginacion, 'producto encontrado', 'productos encontrados') }}</p>
+            </div>
+        </div>
+
+        <div class="producto-toolbar">
+            <form class="search-box" method="get" action="{{ url_for('main.productos') }}">
+                {% if categoria_actual %}<input type="hidden" name="categoria" value="{{ categoria_actual }}">{% endif %}
+                {{ icono('buscar', 18) }}
+                <input type="text" name="q" value="{{ buscar }}" placeholder="Buscar por nombre o código..." />
+            </form>
+        </div>
+
+        <div class="chip-row">
+            <a href="{{ url_for('main.productos', q=buscar) }}" class="chip {{ 'activo' if not categoria_actual }}">Todos</a>
+            {% for cat in categorias %}
+            <a href="{{ url_for('main.productos', categoria=cat.id_categoria, q=buscar) }}" class="chip {{ 'activo' if categoria_actual == cat.id_categoria }}">{{ cat.nombre }}</a>
+            {% endfor %}
+        </div>
+
+        {% if productos %}
+        <div class="producto-grid">
+            {% for p in productos %}
+            {% include "productos/_card.html" %}
+            {% endfor %}
+        </div>
+
+        {{ paginacion_barra(paginacion, 'main.productos') }}
+        {% else %}
+        <div class="carrito-vacio">
+            <div class="icono">{{ icono('huella', 48) }}</div>
+            <p>No encontramos productos con esos filtros.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

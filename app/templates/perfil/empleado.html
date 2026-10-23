@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Mi perfil — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Mi perfil</h2>
+                <p>
+                    {{ empleado.nombre }} {{ empleado.apellido }} —
+                    <span class="badge {{ 'exito' if empleado.es_administrador else 'aviso' }}">{{ empleado.nombre_rol }}</span>
+                </p>
+            </div>
+            {% if empleado.es_administrador %}
+            <a href="{{ url_for('admin.dashboard') }}" class="section-link">Ir al panel {{ icono('flecha', 14) }}</a>
+            {% else %}
+            <a href="{{ url_for('admin.productos') }}" class="section-link">Ir al catálogo {{ icono('flecha', 14) }}</a>
+            {% endif %}
+        </div>
+
+        <div class="perfil-grid">
+            <div class="card">
+                <h3 class="card-titulo">Mis datos</h3>
+                <form id="perfil-form" method="post" action="{{ url_for('perfil.actualizar') }}">
+                    <div class="form-group">
+                        <label>Nombre completo</label>
+                        <input type="text" class="form-control" value="{{ empleado.nombre }} {{ empleado.apellido }}" disabled />
+                    </div>
+                    <div class="form-group">
+                        <label>Código de empleado</label>
+                        <input type="text" class="form-control" value="{{ empleado.id_empleado }}" disabled />
+                    </div>
+                    <div class="form-group">
+                        <label>Usuario / correo</label>
+                        <input type="text" class="form-control" value="{{ empleado.correo }}" disabled />
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input type="tel" id="telefono" name="telefono" class="form-control" value="{{ empleado.telefono or '' }}" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <p class="nota-perfil">
+                        El rol solo lo puede cambiar un administrador desde la base de datos.
+                    </p>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3 class="card-titulo">{{ icono('escudo', 16) }} Mi rol</h3>
+                <p class="rol-descripcion">
+                    {{ empleado.rol.descripcion if empleado.rol and empleado.rol.descripcion else 'Sin descripción registrada.' }}
+                </p>
+
+                <ul class="perfil-permisos">
+                    <li class="permitido">{{ icono('check', 15) }} Gestionar el catálogo de productos</li>
+                    <li class="permitido">{{ icono('check', 15) }} Consultar las cuentas de clientes</li>
+                    <li class="{{ 'permitido' if empleado.es_administrador else 'denegado' }}">
+                        {{ icono('check' if empleado.es_administrador else 'cerrar', 15) }} Ver las estadísticas de ventas
+                    </li>
+                    <li class="{{ 'permitido' if empleado.es_administrador else 'denegado' }}">
+                        {{ icono('check' if empleado.es_administrador else 'cerrar', 15) }} Eliminar cuentas de clientes
+                    </li>
+                </ul>
+
+                <h3 class="card-titulo" style="margin-top:1.4rem;">Mi actividad</h3>
+                <ul class="perfil-datos">
+                    <li><span>Ventas atendidas</span><strong>{{ resumen.ventas_atendidas }}</strong></li>
+                    <li><span>Total facturado</span><strong>{{ resumen.total_facturado | pesos }}</strong></li>
+                    <li><span>Venta promedio</span><strong>{{ resumen.ticket_promedio | pesos }}</strong></li>
+                    <li><span>Última venta</span><strong>{{ resumen.ultima_venta.strftime('%d/%m/%Y') if resumen.ultima_venta else '—' }}</strong></li>
+                </ul>
+
+                <div class="perfil-acciones">
+                    {% if empleado.es_administrador %}
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline btn-sm">{{ icono('grafico', 15) }} Estadísticas</a>
+                    {% endif %}
+                    <a href="{{ url_for('admin.productos') }}" class="btn btn-outline btn-sm">{{ icono('caja', 15) }} Productos</a>
+                    <a href="{{ url_for('admin.usuarios') }}" class="btn btn-outline btn-sm">{{ icono('usuarios', 15) }} Clientes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("perfil-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    // CABECERA_AJAX (app.js) le dice al servidor que esto es el JavaScript
+    // del sitio: sin ella, una sesion vencida responderia con una redireccion
+    // a la portada y resp.json() reventaria con un error de sintaxis.
+    const resp = await fetch(e.target.action, {
+        method: "POST", body: formData, headers: CABECERA_AJAX,
+    });
+    const data = await resp.json();
+    if (data.ok) mostrarToast("Perfil actualizado.");
+    else if (data.requiere_login) pedirInicioDeSesion(data.mensaje);
+    else mostrarToast(data.mensaje || "No se pudo actualizar el perfil.", true);
+});
+</script>
+{% endblock %}

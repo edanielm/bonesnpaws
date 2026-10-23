@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Envíos — Panel Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Envíos</h2>
+                <p>Seguimiento de los pedidos despachados y su guía.</p>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">{{ icono('salir', 16) }} Cerrar sesión</a>
+        </div>
+
+        {% include "admin/_nav.html" %}
+
+        {# Filtro por estado. El estado activo se resalta, igual que los chips
+           de categoria del catalogo. #}
+        <div class="chip-row">
+            <a href="{{ url_for('admin.envios') }}" class="chip {{ 'activo' if not estado_actual }}">
+                Todos <span class="chip-conteo">{{ resumen.total }}</span>
+            </a>
+            {% for estado in estados %}
+            <a href="{{ url_for('admin.envios', estado=estado) }}" class="chip {{ 'activo' if estado_actual == estado }}">
+                {{ estado }} <span class="chip-conteo">{{ resumen[estado] }}</span>
+            </a>
+            {% endfor %}
+        </div>
+
+        <div class="card">
+            <div class="tabla-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Guía</th>
+                            <th>Factura</th>
+                            <th>Cliente</th>
+                            <th>Transportadora</th>
+                            <th>Despacho</th>
+                            <th>Entrega estimada</th>
+                            <th>Estado</th>
+                            <th>Cambiar a</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in envios %}
+                        <tr>
+                            <td><code class="codigo-producto">{{ e.numero_guia }}</code></td>
+                            <td>
+                                <a href="{{ url_for('factura.detalle', numero_factura=e.numero_factura) }}">
+                                    {{ e.numero_factura | folio(config.FACTURA_PREFIJO) }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if e.factura and e.factura.id_usuario %}
+                                <a href="{{ url_for('admin.usuario_detalle', id_usuario=e.factura.id_usuario) }}">
+                                    {{ e.factura.id_usuario }}
+                                </a>
+                                {% else %}—{% endif %}
+                            </td>
+                            <td>{{ e.transportadora.nombre if e.transportadora else '—' }}</td>
+                            <td>{{ e.fecha_envio.strftime('%d/%m/%Y') if e.fecha_envio else '—' }}</td>
+                            <td>
+                                {{ e.fecha_entrega_estimada.strftime('%d/%m/%Y') if e.fecha_entrega_estimada else '—' }}
+                                {% if e.estado != 'Entregado' and e.fecha_entrega_estimada and e.fecha_entrega_estimada < hoy %}
+                                    <span class="badge peligro">Atrasado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if e.estado == 'Entregado' %}
+                                    <span class="badge exito">{{ icono('check', 12) }} Entregado</span>
+                                    {% if e.fecha_entrega_real %}
+                                    <div class="celda-nota">{{ e.fecha_entrega_real.strftime('%d/%m/%Y') }}</div>
+                                    {% endif %}
+                                {% elif e.estado == 'En camino' %}
+                                    <span class="badge aviso">En camino</span>
+                                {% else %}
+                                    <span class="badge">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="tabla-acciones">
+                                    {% for estado in estados if estado != e.estado %}
+                                    <form method="post" action="{{ url_for('admin.cambiar_estado_envio', id_envio=e.id_envio) }}">
+                                        <input type="hidden" name="estado" value="{{ estado }}" />
+                                        <input type="hidden" name="volver_a" value="{{ estado_actual }}" />
+                                        <button type="submit" class="btn btn-outline btn-sm">{{ estado }}</button>
+                                    </form>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="tabla-vacia">
+                                {% if estado_actual %}
+                                    No hay envíos en estado «{{ estado_actual }}».
+                                {% else %}
+                                    Todavía no hay envíos registrados. Se generan solos con cada compra.
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

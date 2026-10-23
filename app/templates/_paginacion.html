@@ -1,0 +1,70 @@
+{# ---------------------------------------------------------------------
+   Barra de paginacion, compartida por el catalogo publico, el catalogo del
+   panel y el listado de cuentas de clientes.
+
+   Se le pasa el objeto Pagination de Flask-SQLAlchemy y el endpoint al que
+   deben apuntar los enlaces; los filtros que ya estuvieran puestos (busqueda,
+   categoria) se conservan con `request.args`, para que cambiar de pagina no
+   borre lo que la persona estaba mirando.
+
+       {% from "_paginacion.html" import paginacion_barra %}
+       {{ paginacion_barra(paginacion, 'main.productos') }}
+   --------------------------------------------------------------------- #}
+{% from "_iconos.html" import icono %}
+
+{% macro _enlace(endpoint, numero) -%}
+    {{ url_for(endpoint, **dict(request.args.to_dict(), pagina=numero)) }}
+{%- endmacro %}
+
+{% macro paginacion_barra(paginacion, endpoint) -%}
+{% if paginacion and paginacion.pages > 1 %}
+<nav class="paginacion" aria-label="Paginación de resultados">
+    {% if paginacion.has_prev %}
+        <a href="{{ _enlace(endpoint, paginacion.prev_num) }}" class="pag-btn" rel="prev" aria-label="Página anterior">
+            {{ icono('flecha', 15, 'ico-izq') }} Anterior
+        </a>
+    {% else %}
+        <span class="pag-btn deshabilitado" aria-hidden="true">{{ icono('flecha', 15, 'ico-izq') }} Anterior</span>
+    {% endif %}
+
+    <div class="pag-numeros">
+        {# iter_pages agrega los '…' donde hay saltos, para no pintar 40 numeros #}
+        {% for numero in paginacion.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
+            {% if numero %}
+                {% if numero == paginacion.page %}
+                    <span class="pag-numero activo" aria-current="page">{{ numero }}</span>
+                {% else %}
+                    <a href="{{ _enlace(endpoint, numero) }}" class="pag-numero">{{ numero }}</a>
+                {% endif %}
+            {% else %}
+                <span class="pag-salto">…</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if paginacion.has_next %}
+        <a href="{{ _enlace(endpoint, paginacion.next_num) }}" class="pag-btn" rel="next" aria-label="Página siguiente">
+            Siguiente {{ icono('flecha', 15) }}
+        </a>
+    {% else %}
+        <span class="pag-btn deshabilitado" aria-hidden="true">Siguiente {{ icono('flecha', 15) }}</span>
+    {% endif %}
+</nav>
+{% endif %}
+{%- endmacro %}
+
+{# Texto de apoyo: "Mostrando 1–12 de 87". Va aparte de la barra porque el
+   encabezado de cada pagina lo coloca en un sitio distinto. #}
+{% macro paginacion_resumen(paginacion, singular, plural) -%}
+{% if paginacion and paginacion.total %}
+    {% set desde = (paginacion.page - 1) * paginacion.per_page + 1 %}
+    {% set hasta = desde + paginacion.items | length - 1 %}
+    {% if paginacion.pages > 1 %}
+        Mostrando {{ desde }}–{{ hasta }} de {{ paginacion.total }} {{ plural }}
+    {% else %}
+        {{ paginacion.total }} {{ plural if paginacion.total != 1 else singular }}
+    {% endif %}
+{% else %}
+    Sin resultados
+{% endif %}
+{%- endmacro %}

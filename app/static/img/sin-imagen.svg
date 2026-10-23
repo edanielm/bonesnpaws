@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Producto sin imagen">
+  <!-- Placeholder local de producto sin imagen.
+       Se usa en vez de un servicio externo (placehold.co) para que el
+       proyecto se vea igual en un equipo sin conexion a internet. -->
+  <rect width="200" height="200" fill="#e2ecf6"/>
+  <g fill="#a8c9e8">
+    <ellipse cx="100" cy="118" rx="34" ry="30"/>
+    <ellipse cx="60" cy="74" rx="15" ry="19"/>
+    <ellipse cx="94" cy="58" rx="15" ry="19"/>
+    <ellipse cx="128" cy="66" rx="15" ry="19"/>
+    <ellipse cx="147" cy="94" rx="13" ry="17"/>
+  </g>
+  <text x="100" y="176" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif"
+        font-size="14" fill="#7a8c9e">Sin imagen</text>
+</svg>

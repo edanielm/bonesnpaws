@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Tu carrito — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Tu carrito</h2>
+                {# El contador lo actualiza app.js al quitar un producto, sin recargar #}
+                <p><span data-carrito-conteo>{{ items | length }}</span> producto(s) en tu carrito</p>
+            </div>
+        </div>
+
+        {% if items %}
+        <div class="carrito-layout" id="carrito-layout">
+            <div class="card" id="carrito-lista">
+                {% for item in items %}
+                <div class="carrito-item" data-fila-carrito="{{ item.id_producto }}">
+                    <img src="{{ item.producto.imagen_url or img_placeholder }}" alt="{{ item.producto.nombre }}" onerror="this.onerror=null;this.src='{{ img_placeholder }}';" />
+                    <div>
+                        <h4>{{ item.producto.nombre }}</h4>
+                        <span class="precio-unit">{{ item.producto.precio | pesos }} c/u</span>
+                        {# Aviso de existencias: se ve antes de intentar subir la cantidad #}
+                        {% if item.producto.stock <= 5 %}
+                        <span class="stock-tag bajo">Quedan {{ item.producto.stock }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="carrito-cant">
+                        <input type="number" min="1" max="{{ item.producto.stock }}" value="{{ item.cantidad }}"
+                               aria-label="Cantidad de {{ item.producto.nombre }}"
+                               data-cant-carrito="{{ item.id_producto }}"
+                               data-stock-max="{{ item.producto.stock }}"
+                               data-nombre-producto="{{ item.producto.nombre }}" />
+                        <span class="carrito-linea-total" data-linea-total="{{ item.id_producto }}">
+                            {{ ((item.producto.precio | float) * item.cantidad) | pesos }}
+                        </span>
+                    </div>
+                    <button class="btn btn-danger btn-sm" data-eliminar-carrito="{{ item.id_producto }}">
+                        {{ icono('basura', 15) }} Eliminar
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:1rem;">Resumen</h3>
+                <div class="resumen-linea"><span>Subtotal</span><span data-total="subtotal">{{ subtotal | pesos }}</span></div>
+                <div class="resumen-linea"><span>IVA (19%)</span><span data-total="iva">{{ iva | pesos }}</span></div>
+                <div class="resumen-linea">
+                    <span>
+                        Envío
+                        {% if ciudad_envio %}<small class="envio-ciudad">a {{ ciudad_envio }}</small>{% endif %}
+                    </span>
+                    <span data-total="costo_envio">
+                        {% if envio_gratis %}<span class="badge exito">Gratis</span>{% else %}{{ costo_envio | pesos }}{% endif %}
+                    </span>
+                </div>
+                <div class="resumen-linea total"><span>Total</span><span data-total="total">{{ total | pesos }}</span></div>
+
+                {# Empujoncito para llegar al envio gratis. Se recalcula solo al
+                   cambiar las cantidades (ver app.js). #}
+                <p class="envio-aviso" data-envio-aviso>
+                    {% if envio_gratis %}
+                        {{ icono('check', 15) }} ¡Tu envío es gratis!
+                    {% elif falta_para_envio_gratis %}
+                        Te faltan {{ falta_para_envio_gratis | pesos }} para el envío gratis.
+                    {% endif %}
+                </p>
+
+                <a href="{{ url_for('factura.checkout') }}" class="btn btn-primary btn-block" style="margin-top:1.2rem;">Ir a pagar</a>
+            </div>
+        </div>
+        {% endif %}
+
+        {# Se deja siempre en el HTML (oculto si hay productos) para poder
+           mostrarlo al vaciar el carrito sin tener que recargar la pagina #}
+        <div class="carrito-vacio" id="carrito-vacio" {% if items %}hidden{% endif %}>
+            <div class="icono">{{ icono('carrito', 48) }}</div>
+            <p>Tu carrito está vacío. ¡Explora nuestros productos!</p>
+            <a href="{{ url_for('main.productos') }}" class="btn btn-primary" style="margin-top:1rem;">Ver productos</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

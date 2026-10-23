@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}{{ producto.nombre }} — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="detalle-grid">
+            <div>
+                <div class="detalle-imagen">
+                    <img id="detalle-imagen-principal" src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}"
+                         onerror="this.onerror=null;this.src='{{ img_placeholder }}';" />
+                </div>
+                {% if producto.imagenes|length > 1 %}
+                <div class="detalle-miniaturas">
+                    {% for imagen in producto.imagenes %}
+                    <button type="button" class="detalle-miniatura{{ ' activa' if imagen.ruta_imagen == producto.imagen_url else '' }}"
+                            data-galeria-thumb="detalle-imagen-principal" data-src="{{ imagen.ruta_imagen }}">
+                        <img src="{{ imagen.ruta_imagen }}" alt="Foto de {{ producto.nombre }}"
+                             onerror="this.onerror=null;this.src='{{ img_placeholder }}';" />
+                    </button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="detalle-info">
+                <span class="hero-eyebrow">{{ icono('etiqueta', 14) }} {{ producto.categoria.nombre if producto.categoria else '' }}</span>
+                <h1>{{ producto.nombre }}</h1>
+                <p class="desc">{{ producto.descripcion or 'Sin descripción disponible.' }}</p>
+                <span class="precio">{{ producto.precio | pesos }}</span>
+
+                <div class="detalle-meta">
+                    <div><strong>{{ producto.stock }}</strong>unidades en stock</div>
+                    <div><strong>{{ producto.proveedor.nombre if producto.proveedor else '—' }}</strong>proveedor</div>
+                    <div><strong><code class="codigo-producto">{{ producto.codigo }}</code></strong>referencia</div>
+                </div>
+
+                {% if producto.stock > 0 %}
+                <div class="qty-selector">
+                    <button type="button" data-qty-menos="cantidad-{{ producto.id_producto }}" aria-label="Quitar uno">{{ icono('menos', 16) }}</button>
+                    <input type="number" id="cantidad-{{ producto.id_producto }}" value="1" min="1" max="{{ producto.stock }}" />
+                    <button type="button" data-qty-mas="cantidad-{{ producto.id_producto }}" aria-label="Agregar uno">{{ icono('mas', 16) }}</button>
+                </div>
+                <button class="btn btn-primary" data-agregar-carrito="{{ producto.id_producto }}">{{ icono('carrito', 18) }} Agregar al carrito</button>
+                {% else %}
+                <div class="alert alert-warning">{{ icono('alerta', 18) }}<span>Este producto está agotado por ahora.</span></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

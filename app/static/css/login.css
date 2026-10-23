@@ -1,0 +1,301 @@
+/* ============================================================
+   login.css — Modal flotante de autenticacion (Gato Negro Animado)
+   Mismo diseno y animaciones del proyecto original.
+   Cambios: modal flotante con blur + colores tomados de las
+   variables de tema de style.css, para que el modal se vea
+   igual de bien en modo claro y en modo oscuro.
+   ============================================================ */
+
+:root {
+    --login-bg: var(--bg-card);
+    --login-bg-2: var(--bg-2);
+    --login-border: var(--border-soft);
+    --cat-cuerpo: #39404f;      /* el gato sigue siendo negro en ambos modos */
+    --cat-ojo: #b4e62d;
+    --cat-bigote: rgba(255, 255, 255, 0.16);
+}
+
+:root[data-theme="dark"] {
+    --cat-cuerpo: #2c313c;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) { --cat-cuerpo: #2c313c; }
+}
+
+/* --- Overlay del modal --- */
+#login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: var(--overlay-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+#login-overlay.abierto {
+    display: flex;
+    animation: fadeInOverlay 0.25s ease;
+}
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.login-container {
+    width: 400px;
+    max-width: 92vw;
+    position: relative;
+    animation: popIn 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.2);
+}
+@keyframes popIn {
+    from { transform: translateY(20px) scale(0.96); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.login-cerrar {
+    position: absolute;
+    top: -18px;
+    right: -6px;
+    z-index: 20;
+    background: var(--login-bg-2);
+    border: 1px solid var(--login-border);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+    color: var(--text-hi);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+.login-cerrar:hover { color: var(--rosa); border-color: var(--rosa); }
+
+#auth-form {
+    width: 100%;
+    background: var(--login-bg);
+    padding: 3em 2em 2.5em 2em;
+    border-radius: 2em;
+    border: 1px solid var(--login-border);
+    box-shadow: var(--shadow-card);
+    position: relative;
+    z-index: 5;
+    transition: all 0.5s ease;
+}
+#auth-form h2 { text-align: center; color: var(--text-hi); margin-bottom: 1rem; font-size: 1.4rem; font-family: "Poppins", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+#auth-form input {
+    width: 100%; padding: 0.8rem; margin-bottom: 0.8rem;
+    background: var(--login-bg-2); color: var(--text-hi);
+    border: none; border-bottom: 2px solid var(--login-border);
+    outline: none; font-size: 0.9rem; transition: 0.3s;
+    font-family: "Poppins", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; border-radius: 0.5rem 0.5rem 0 0;
+}
+#auth-form input::placeholder { color: var(--text-low); }
+#auth-form input:focus { border-color: var(--rosa); }
+.input-row { display: flex; gap: 10px; }
+.reg-only { display: none; }
+.register-mode .reg-only { display: block; }
+
+/* Modo "olvide mi contraseña" */
+.recuperar-mode .login-only { display: none !important; }
+.recuperar-mode .reg-only { display: none !important; }
+.recuperar-mode .recuperar-only { display: block !important; }
+.register-mode .recuperar-only { display: none !important; }
+#olvide-password { color: var(--azul); font-size: 0.82rem; }
+
+/* Modo "escribe el codigo que te llego al correo" (paso 2 de recuperar).
+   Correo y documento se quedan en el formulario pero ocultos: el servidor
+   los necesita para saber de quien es el codigo. */
+/* !important porque .toggle-text (mas abajo en este archivo) tambien es
+   un selector de una clase y pone display:block: sin el, el enlace
+   "¿No te llegó? Pedir otro código" se veia tambien en el login. */
+.codigo-only { display: none !important; }
+.codigo-mode .codigo-only { display: block !important; }
+.codigo-mode .login-only,
+.codigo-mode .reg-only,
+.codigo-mode .recuperar-only,
+.codigo-mode #email { display: none !important; }
+.recuperar-mode .codigo-only,
+.register-mode .codigo-only { display: none !important; }
+
+.codigo-aviso {
+    background: var(--exito-bg, rgba(16, 185, 129, 0.12));
+    color: var(--exito, #0f766e);
+    border: 1px solid var(--exito-bd, rgba(16, 185, 129, 0.35));
+    padding: 0.6rem 0.9rem; border-radius: 0.8rem;
+    font-size: 0.82rem; line-height: 1.4; margin-bottom: 0.8rem;
+    font-family: "Poppins", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+}
+#recuperar-codigo {
+    text-align: center; letter-spacing: 0.5rem;
+    font-size: 1.15rem; font-weight: 600;
+}
+#recuperar-codigo::placeholder { letter-spacing: normal; font-weight: 400; font-size: 0.9rem; }
+#codigo-reenviar { color: var(--azul); font-size: 0.82rem; }
+
+/* ===== Captcha =====
+   La imagen trae su propio fondo claro (la dibuja el servidor), asi que no
+   depende del tema; el marco si usa los colores del sitio para que no se
+   vea pegado encima del formulario. */
+.captcha-bloque { margin-bottom: 0.4rem; }
+.captcha-label {
+    display: block; margin-bottom: 0.45rem;
+    font-size: 0.78rem; color: var(--text-mid);
+    font-family: "Poppins", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+}
+.captcha-fila {
+    display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem;
+}
+.captcha-img {
+    display: block; width: 150px; height: 50px; border-radius: 0.5rem;
+    border: 1px solid var(--login-border); background: #f8fafc;
+    /* El codigo esta dibujado, no es texto: igual se evita que el cursor
+       sugiera que se puede seleccionar o arrastrar. */
+    user-select: none; -webkit-user-drag: none; pointer-events: none;
+}
+.captcha-recargar {
+    /* Ojo: #auth-form button lleva ancho completo y margen arriba; este
+       boton es un icono, asi que los anula. */
+    width: 40px !important; height: 40px;
+    padding: 0 !important; margin: 0 !important;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--login-border) !important;
+    border-radius: 0.6rem !important;
+    background: var(--login-bg-2) !important;
+    color: var(--text-mid) !important;
+    box-shadow: none !important; cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, transform 0.3s;
+}
+.captcha-recargar:hover {
+    color: var(--rosa) !important;
+    border-color: var(--rosa) !important;
+    transform: rotate(-90deg);
+}
+#captcha { text-transform: uppercase; letter-spacing: 0.15rem; }
+#captcha::placeholder { text-transform: none; letter-spacing: normal; }
+
+/* El ojito dentro del modal.
+   #auth-form input lleva su propio margin-bottom; si se queda en el input
+   ya envuelto, el boton se centra contando ese margen y queda alto. El
+   margen se pasa al contenedor. */
+#auth-form .campo-con-ojo { margin-bottom: 0.8rem; }
+#auth-form .campo-con-ojo > input { margin-bottom: 0; }
+#auth-form .ojo-boton {
+    /* #auth-form button es el boton grande rosado de enviar: esto lo anula
+       para que el ojito no herede su ancho completo ni su fondo. */
+    width: 40px !important; height: 40px;
+    padding: 0 !important; margin: 0 !important;
+    background: none !important; border: none !important;
+    box-shadow: none !important; border-radius: 0.5rem !important;
+    color: var(--text-low) !important;
+    font-weight: normal;
+}
+#auth-form .ojo-boton:hover,
+#auth-form .ojo-boton[aria-pressed="true"] { color: var(--rosa) !important; }
+
+#auth-form button {
+    width: 100%; padding: 1rem; background: var(--rosa);
+    color: var(--on-accent); border: none; border-radius: 3rem;
+    font-weight: 600; cursor: pointer; margin-top: 1rem;
+    box-shadow: 0 4px 15px var(--rosa-tenue);
+    font-family: "Poppins", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+}
+.toggle-text {
+    text-align: center; margin-top: 1.2rem; font-size: 0.85rem;
+    font-family: "Poppins", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; color: var(--text-mid);
+    width: 100%; display: block;
+}
+.toggle-text a {
+    color: var(--azul); font-weight: 600; text-decoration: none; cursor: pointer;
+    /* "¿Olvidaste tu contraseña?", "Regístrate" y "Pedir otro código" son
+       acciones, no texto corrido: con el dedo hay que poder acertarles. */
+    display: inline-block; padding: 0.4rem 0.3rem;
+}
+
+.form-error {
+    background: var(--peligro-bg); color: var(--peligro);
+    border: 1px solid var(--peligro-bd);
+    padding: 0.6rem 1rem;
+    border-radius: 0.8rem; font-size: 0.85rem; margin-bottom: 0.8rem;
+    display: none; font-family: "Poppins", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+}
+.form-error.visible { display: block; }
+
+/* --- EL GATO (Formas Organicas) --- */
+.cat-container { position: absolute; width: 100%; top: -100px; left: 0; }
+.cat-face {
+    width: 140px; height: 115px; background: var(--cat-cuerpo); margin: 0 auto;
+    border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+    position: relative; z-index: 4;
+}
+.ear-l, .ear-r {
+    width: 55px; height: 65px; background: var(--cat-cuerpo);
+    position: absolute; top: -5px; border-radius: 10% 80% 20% 20%; z-index: 3;
+}
+.ear-l { left: 115px; transform: rotate(-25deg); }
+.ear-r { right: 115px; transform: rotate(25deg) scaleX(-1); }
+.ear-l::after, .ear-r::after {
+    content: ''; position: absolute; width: 30px; height: 45px;
+    background: var(--rosa-suave); left: 12px; top: 10px;
+    border-radius: 10% 80% 20% 20%; opacity: 0.8;
+}
+.eye-l, .eye-r {
+    width: 42px; height: 38px; background: var(--cat-ojo);
+    position: absolute; top: 32px;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+}
+.eye-l { left: 22px; } .eye-r { right: 22px; }
+.eyeball-l, .eyeball-r {
+    width: 6px; height: 26px; background: #000;
+    position: absolute; left: 18px; top: 6px; border-radius: 50%; transition: 0.3s;
+}
+.nose {
+    width: 10px; height: 6px; background: #000; position: absolute;
+    top: 72px; left: 50%; transform: translateX(-50%); border-radius: 50%;
+}
+.whiskers-l, .whiskers-r { position: absolute; top: 75px; display: flex; flex-direction: column; gap: 5px; }
+.whiskers-l { left: -25px; } .whiskers-r { right: -25px; transform: scaleX(-1); }
+.whiskers-l span, .whiskers-r span { width: 35px; height: 1px; background: var(--cat-bigote); }
+.hand-l, .hand-r {
+    width: 45px; height: 45px; background: var(--cat-cuerpo);
+    position: absolute; top: 85px; z-index: 10; border-radius: 50%;
+    transition: 0.6s ease-in-out;
+}
+.hand-l { left: 110px; } .hand-r { right: 110px; }
+.paw-l, .paw-r {
+    width: 60px; height: 60px; background: var(--cat-cuerpo);
+    position: absolute; bottom: -25px; z-index: 11;
+    border-radius: 1.5em 1.5em 1.2em 1.2em;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+}
+.paw-l { left: 60px; } .paw-r { right: 60px; }
+.paw-l::before, .paw-r::before {
+    content: ''; position: absolute; width: 30px; height: 25px;
+    background: var(--rosa-suave); bottom: 12px; left: 15px; border-radius: 50% 50% 45% 45%;
+}
+.paw-l::after, .paw-r::after {
+    content: ''; position: absolute; width: 10px; height: 12px;
+    background: var(--rosa-suave); top: 10px; left: 25px; border-radius: 50%;
+    box-shadow: -15px 5px var(--rosa-suave), 15px 5px var(--rosa-suave);
+}
+
+@media (max-width: 480px) {
+    .cat-container { top: -85px; transform: scale(0.85); }
+    .login-container { max-width: 94vw; }
+    /* El paso del codigo son seis campos; en un telefono hay que poder
+       bajar dentro de la ventana en vez de quedarse sin ver el boton. */
+    /* 7rem arriba: el gato asoma por encima de la ventana y con menos
+       espacio se le cortaban las orejas contra el borde de la pantalla. */
+    #login-overlay { align-items: flex-start; padding: 7rem 0 2rem; overflow-y: auto; }
+}
+
+/* Telefono apaisado: muy poca altura. El gato ocupa un tercio de la
+   pantalla, asi que se achica y la ventana se vuelve desplazable. */
+@media (max-height: 620px) {
+    #login-overlay { align-items: flex-start; padding: 4.5rem 0 2rem; overflow-y: auto; }
+    .cat-container { transform: scale(0.72); top: -70px; }
+}

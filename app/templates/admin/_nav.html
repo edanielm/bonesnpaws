@@ -1,0 +1,30 @@
+{# Barra de secciones del panel. Marca como activa la seccion actual y
+   solo muestra lo que el rol de quien entro puede abrir: las estadisticas
+   son exclusivas del Administrador (ver @requiere_admin en admin_routes.py).
+   Ocultar el enlace es cortesia, no seguridad: quien escriba /admin/ a mano
+   igual choca con el decorador. #}
+{% from "_iconos.html" import icono %}
+<div class="admin-nav">
+    {% if es_administrador %}
+    <a href="{{ url_for('admin.dashboard') }}" class="{{ 'activo' if request.endpoint == 'admin.dashboard' }}">
+        {{ icono('grafico', 16) }} Estadísticas
+    </a>
+    {% endif %}
+    <a href="{{ url_for('admin.usuarios') }}" class="{{ 'activo' if request.endpoint in ['admin.usuarios', 'admin.usuario_detalle'] }}">
+        {{ icono('usuarios', 16) }} Usuarios
+    </a>
+    {% if es_administrador %}
+    <a href="{{ url_for('admin.empleados') }}" class="{{ 'activo' if request.endpoint in ['admin.empleados', 'admin.crear_empleado', 'admin.editar_empleado'] }}">
+        {{ icono('escudo', 16) }} Personal
+    </a>
+    {% endif %}
+    <a href="{{ url_for('admin.productos') }}" class="{{ 'activo' if request.endpoint in ['admin.productos', 'admin.crear_producto', 'admin.editar_producto'] }}">
+        {{ icono('caja', 16) }} Productos
+    </a>
+    <a href="{{ url_for('admin.envios') }}" class="{{ 'activo' if request.endpoint == 'admin.envios' }}">
+        {{ icono('ubicacion', 16) }} Envíos
+    </a>
+    <a href="{{ url_for('perfil.ver') }}" class="{{ 'activo' if request.endpoint == 'perfil.ver' }}">
+        {{ icono('usuario', 16) }} Mi perfil
+    </a>
+</div>

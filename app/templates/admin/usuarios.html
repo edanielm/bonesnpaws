@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% from "_paginacion.html" import paginacion_barra, paginacion_resumen %}
+{% block title %}Usuarios — Panel Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Cuentas de usuarios</h2>
+                <p>{{ paginacion_resumen(paginacion, 'cliente registrado', 'clientes registrados') }} en la tienda.</p>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">{{ icono('salir', 16) }} Cerrar sesión</a>
+        </div>
+
+        {% include "admin/_nav.html" %}
+
+        <div class="producto-toolbar">
+            <form class="search-box" method="get" action="{{ url_for('admin.usuarios') }}">
+                {{ icono('buscar', 18) }}
+                <input type="text" name="q" value="{{ buscar }}" placeholder="Buscar por nombre, documento o correo..." />
+            </form>
+            {% if buscar %}
+            <a href="{{ url_for('admin.usuarios') }}" class="btn btn-outline btn-sm">Limpiar</a>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="tabla-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Documento</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Teléfono</th>
+                            <th>Compras</th>
+                            <th>Total gastado</th>
+                            <th>Última compra</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr>
+                            <td>{{ u.cliente.id_usuario }}</td>
+                            <td>{{ u.cliente.nombre }} {{ u.cliente.apellido }}</td>
+                            <td>{{ u.cliente.correo }}</td>
+                            <td>{{ u.cliente.telefono or '—' }}</td>
+                            <td>
+                                {% if u.compras %}
+                                    <span class="badge exito">{{ u.compras }}</span>
+                                {% else %}
+                                    <span class="badge">0</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ u.gastado | pesos }}</td>
+                            <td>{{ u.ultima_compra.strftime('%d/%m/%Y') if u.ultima_compra else '—' }}</td>
+                            <td>
+                                <div class="tabla-acciones">
+                                    <a href="{{ url_for('admin.usuario_detalle', id_usuario=u.cliente.id_usuario) }}" class="btn btn-outline btn-sm">
+                                        {{ icono('ojo', 15) }} Ver
+                                    </a>
+                                    {% if u.compras %}
+                                        {# Con compras registradas el borrado se bloquea: la ficha explica por que #}
+                                        <span class="badge aviso" title="Tiene compras en el histórico de ventas">
+                                            {{ icono('escudo', 12) }} protegido
+                                        </span>
+                                    {% else %}
+                                        <form method="post"
+                                              action="{{ url_for('admin.eliminar_usuario', id_usuario=u.cliente.id_usuario) }}"
+                                              onsubmit="return confirm('¿Eliminar definitivamente la cuenta de {{ u.cliente.nombre }} {{ u.cliente.apellido }}?');">
+                                            <button type="submit" class="btn btn-danger btn-sm">{{ icono('basura', 15) }} Eliminar</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="tabla-vacia">
+                                {% if buscar %}Ningún usuario coincide con «{{ buscar }}».{% else %}Todavía no hay clientes registrados.{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{ paginacion_barra(paginacion, 'admin.usuarios') }}
+    </div>
+</section>
+{% endblock %}

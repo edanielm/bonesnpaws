@@ -1,0 +1,24 @@
+{% from "_iconos.html" import icono %}
+<div class="producto-card">
+    <a href="{{ url_for('main.producto_detalle', id_producto=p.id_producto) }}" class="producto-imagen">
+        <span class="producto-cat-tag">{{ p.categoria.nombre if p.categoria else '' }}</span>
+        <img src="{{ p.imagen_url or img_placeholder }}" alt="{{ p.nombre }}" loading="lazy" onerror="this.onerror=null;this.src='{{ img_placeholder }}';" />
+    </a>
+    <div class="producto-body">
+        <h3><a href="{{ url_for('main.producto_detalle', id_producto=p.id_producto) }}">{{ p.nombre }}</a></h3>
+        <p class="desc">{{ p.descripcion or '' }}</p>
+        <div class="producto-precio-row">
+            <span class="precio">{{ p.precio | pesos }}</span>
+            {% if p.stock == 0 %}
+                <span class="stock-tag agotado">Agotado</span>
+            {% elif p.stock <= 5 %}
+                <span class="stock-tag bajo">Últimas {{ p.stock }} unid.</span>
+            {% else %}
+                <span class="stock-tag">{{ p.stock }} disponibles</span>
+            {% endif %}
+        </div>
+        <button class="btn btn-primary btn-block btn-sm" data-agregar-carrito="{{ p.id_producto }}" {{ 'disabled' if p.stock == 0 }}>
+            {% if p.stock == 0 %}Agotado{% else %}{{ icono('carrito', 16) }} Agregar al carrito{% endif %}
+        </button>
+    </div>
+</div>

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Bones & Paws — Todo para tu mejor amigo{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <div>
+            <span class="hero-eyebrow">{{ icono('huella', 16) }} Nueva colección</span>
+            <h1>Cuidado y cariño para <span class="accent">cada pata</span> en tu hogar</h1>
+            <p class="lead">Alimento, accesorios y bienestar para perros, gatos y algo más — seleccionado por proveedores confiables, con envío a toda Colombia.</p>
+            <div class="hero-actions">
+                <a href="{{ url_for('main.productos') }}" class="btn btn-primary">Ver productos</a>
+                <a href="{{ url_for('main.categorias') }}" class="btn btn-outline">Explorar categorías</a>
+            </div>
+        </div>
+        <div class="hero-art">
+            {# Rastro de huellas: queda de respaldo si la foto aun no esta cargada #}
+            <div class="huella-trail">
+                <span style="top:12%; left:18%; transform: rotate(-18deg);"></span>
+                <span style="top:35%; left:55%; transform: rotate(12deg) scale(1.3);"></span>
+                <span style="top:65%; left:22%; transform: rotate(-6deg) scale(0.9);"></span>
+                <span style="top:78%; left:65%; transform: rotate(20deg) scale(1.1);"></span>
+            </div>
+            <img class="hero-foto"
+                 src="{{ url_for('static', filename='img/hero-gato.jpg') }}"
+                 alt="Gata carey enroscada con una pañoleta roja de margaritas"
+                 onerror="this.remove();" />
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Categorías</h2>
+                <p>Encuentra justo lo que tu mascota necesita.</p>
+            </div>
+        </div>
+        <div class="categoria-grid">
+            {% for cat in categorias %}
+            <a href="{{ url_for('main.productos', categoria=cat.id_categoria) }}" class="categoria-card">
+                <div class="icono">
+                    {% if cat.nombre == 'Perros' %}{{ icono('perro', 40) }}
+                    {% elif cat.nombre == 'Gatos' %}{{ icono('gato', 40) }}
+                    {% else %}{{ icono('huella', 40) }}{% endif %}
+                </div>
+                <h3>{{ cat.nombre }}</h3>
+                <p>Ver catálogo completo</p>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Destacados</h2>
+                <p>Los favoritos de nuestra comunidad peluda.</p>
+            </div>
+            <a href="{{ url_for('main.productos') }}" class="section-link">Ver todos {{ icono('flecha', 16) }}</a>
+        </div>
+        <div class="producto-grid">
+            {% for p in productos %}
+            {% include "productos/_card.html" %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

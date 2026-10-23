@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Personal — Panel Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Personal de la tienda</h2>
+                <p>
+                    {{ empleados | selectattr('activo') | list | length }} cuenta(s) con acceso
+                    {% set desactivados = empleados | rejectattr('activo') | list | length %}
+                    {% if desactivados %}, {{ desactivados }} desactivada(s){% endif %}.
+                </p>
+            </div>
+            <a href="{{ url_for('admin.crear_empleado') }}" class="btn btn-primary">{{ icono('mas', 16) }} Nuevo empleado</a>
+        </div>
+
+        {% include "admin/_nav.html" %}
+
+        <div class="card">
+            <div class="tabla-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in empleados %}
+                        <tr{% if not e.activo %} style="opacity:0.55;"{% endif %}>
+                            <td>{{ e.nombre }} {{ e.apellido }}</td>
+                            <td>{{ e.correo }}</td>
+                            <td>{{ e.telefono or '—' }}</td>
+                            <td><span class="badge {{ 'exito' if e.es_administrador else '' }}">{{ e.nombre_rol }}</span></td>
+                            <td>
+                                {% if e.activo %}
+                                    <span class="badge exito">Activo</span>
+                                {% else %}
+                                    <span class="badge peligro">Sin acceso</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="tabla-acciones">
+                                    <a href="{{ url_for('admin.editar_empleado', id_empleado=e.id_empleado) }}" class="btn btn-outline btn-sm">
+                                        {{ icono('editar', 15) }} Editar
+                                    </a>
+                                    {% if e.activo %}
+                                        {% if e.id_empleado == session.id_empleado %}
+                                        <span class="badge aviso" title="No puedes desactivar tu propia cuenta">{{ icono('escudo', 12) }} tu cuenta</span>
+                                        {% else %}
+                                        <form method="post" action="{{ url_for('admin.desactivar_empleado', id_empleado=e.id_empleado) }}"
+                                              onsubmit="return confirm('¿Quitarle el acceso al panel a {{ e.nombre }} {{ e.apellido }}?');">
+                                            <button type="submit" class="btn btn-danger btn-sm">{{ icono('salir', 15) }} Desactivar</button>
+                                        </form>
+                                        {% endif %}
+                                    {% else %}
+                                        <form method="post" action="{{ url_for('admin.reactivar_empleado', id_empleado=e.id_empleado) }}">
+                                            <button type="submit" class="btn btn-outline btn-sm">{{ icono('mas', 15) }} Reactivar</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="tabla-vacia">Todavía no hay cuentas de personal.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

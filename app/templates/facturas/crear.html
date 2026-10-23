@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Pagar — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Finalizar compra</h2>
+                <p>Elige tu método de pago para completar el pedido.</p>
+            </div>
+        </div>
+
+        {% if items %}
+        <div class="carrito-layout">
+            <div class="card">
+                <form id="checkout-form">
+                    <div class="form-group">
+                        <label for="metodo_pago">Método de pago</label>
+                        <select id="metodo_pago" name="metodo_pago" class="form-control">
+                            <option value="Tarjeta">Tarjeta de crédito/débito</option>
+                            <option value="PSE">PSE</option>
+                            <option value="Transferencia">Transferencia bancaria</option>
+                        </select>
+                    </div>
+
+                    <div data-metodo-bloque="Tarjeta">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Número de tarjeta</label>
+                                <input type="text" name="numero_tarjeta" class="form-control" placeholder="0000 0000 0000 0000" />
+                            </div>
+                            <div class="form-group">
+                                <label>Franquicia</label>
+                                <input type="text" name="franquicia" class="form-control" placeholder="Visa / Mastercard" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de vencimiento</label>
+                            <input type="date" name="fecha_vencimiento" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div data-metodo-bloque="PSE" style="display:none;">
+                        <div class="form-group">
+                            <label>Banco</label>
+                            <input type="text" name="banco" class="form-control" placeholder="Tu banco" />
+                        </div>
+                    </div>
+
+                    <div data-metodo-bloque="Transferencia" style="display:none;">
+                        <div class="form-group">
+                            <label>Banco</label>
+                            <input type="text" name="banco" class="form-control" placeholder="Banco emisor" />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Número de cuenta</label>
+                                <input type="text" name="numero_cuenta" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>Titular</label>
+                                <input type="text" name="titular" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">Confirmar y pagar {{ total | pesos }}</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:1rem;">Resumen del pedido</h3>
+                {% for item in items %}
+                {# Los parentesis son obligatorios: en Jinja el filtro se aplica
+                   antes que la multiplicacion, asi que sin ellos `pesos` recibia
+                   la cantidad en vez del importe de la linea. #}
+                <div class="resumen-linea">
+                    <span>{{ item.cantidad }} × {{ item.producto.nombre }}</span>
+                    <span>{{ ((item.producto.precio | float) * item.cantidad) | pesos }}</span>
+                </div>
+                {% endfor %}
+                <div class="resumen-linea"><span>Subtotal</span><span>{{ subtotal | pesos }}</span></div>
+                <div class="resumen-linea"><span>IVA (19%)</span><span>{{ iva | pesos }}</span></div>
+                <div class="resumen-linea">
+                    <span>Envío{% if ciudad_envio %} <small class="envio-ciudad">a {{ ciudad_envio }}</small>{% endif %}</span>
+                    <span>{% if envio_gratis %}<span class="badge exito">Gratis</span>{% else %}{{ costo_envio | pesos }}{% endif %}</span>
+                </div>
+                <div class="resumen-linea total"><span>Total</span><span>{{ total | pesos }}</span></div>
+
+                {# A donde se despacha: es la direccion de la cuenta, y se puede
+                   corregir desde el perfil antes de pagar. #}
+                <div class="checkout-envio">
+                    <span class="k">{{ icono('ubicacion', 14) }} Se enviará a</span>
+                    <span class="v">{{ session_direccion or 'Sin dirección registrada' }}</span>
+                    <a href="{{ url_for('perfil.ver') }}">Cambiar dirección</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="carrito-vacio">
+            <div class="icono">{{ icono('carrito', 48) }}</div>
+            <p>Tu carrito está vacío.</p>
+            <a href="{{ url_for('main.productos') }}" class="btn btn-primary" style="margin-top:1rem;">Ver productos</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

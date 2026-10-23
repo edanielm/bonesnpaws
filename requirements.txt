@@ -1,0 +1,24 @@
+# Dependencias de Bones & Paws
+#
+# Se usan rangos en vez de versiones exactas (==) a proposito: una version
+# clavada puede no tener instalador ("wheel") para la version de Python del
+# equipo donde se instale, y ahi pip falla al compilar. Con "mayor o igual,
+# menor que la siguiente version mayor" se instala siempre la ultima version
+# compatible, sin riesgo de cambios que rompan el codigo.
+#
+# Instalacion:  python instalar.py     (recomendado)
+#         o:    pip install -r requirements.txt
+
+Flask>=3.0,<4.0
+Flask-SQLAlchemy>=3.1,<4.0
+mysql-connector-python>=9.0,<10.0
+python-dotenv>=1.0,<2.0
+Werkzeug>=3.0,<4.0
+
+# Generacion del PDF de la factura. Se elige ReportLab porque es Python
+# puro: se instala con pip en cualquier sistema operativo sin necesidad de
+# librerias externas (WeasyPrint, en cambio, exige instalar GTK en Windows).
+reportlab>=4.0,<5.0
+
+# Para correr las pruebas de tests/ con:  pytest tests/
+pytest>=8.0,<9.0

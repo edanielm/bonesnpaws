@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Mis compras — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Mis compras</h2>
+                <p>{{ facturas | length }} factura(s)</p>
+            </div>
+        </div>
+
+        {% if facturas %}
+        <div class="card tabla-scroll">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Factura</th><th>Fecha</th><th>Método</th><th>Total</th><th>Envío</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    {% for f in facturas %}
+                    <tr>
+                        <td>{{ f.numero_factura | folio(config.FACTURA_PREFIJO) }}</td>
+                        <td>{{ f.fecha.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ f.metodo_pago }}</td>
+                        <td>{{ f.total | pesos }}</td>
+                        {# Estado del pedido: cada venta genera su guia (ver EnvioService) #}
+                        <td>
+                            {% if f.envio %}
+                                {% if f.envio.estado == 'Entregado' %}
+                                    <span class="badge exito">{{ icono('check', 12) }} Entregado</span>
+                                {% elif f.envio.estado == 'En camino' %}
+                                    <span class="badge aviso">En camino</span>
+                                {% else %}
+                                    <span class="badge">Pendiente</span>
+                                {% endif %}
+                                <div class="celda-nota">
+                                    <code>{{ f.envio.numero_guia }}</code>
+                                    {% if f.envio.estado == 'Entregado' and f.envio.fecha_entrega_real %}
+                                        · entregado el {{ f.envio.fecha_entrega_real.strftime('%d/%m/%Y') }}
+                                    {% elif f.envio.fecha_entrega_estimada %}
+                                        · llega el {{ f.envio.fecha_entrega_estimada.strftime('%d/%m/%Y') }}
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <span class="badge">Sin envío</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="tabla-acciones">
+                                <a href="{{ url_for('factura.detalle', numero_factura=f.numero_factura) }}"
+                                   class="btn btn-outline btn-sm">{{ icono('ojo', 15) }} Ver factura</a>
+                                <a href="{{ url_for('factura.descargar_pdf', numero_factura=f.numero_factura) }}"
+                                   class="btn btn-outline btn-sm">{{ icono('descargar', 15) }} PDF</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="carrito-vacio">
+            <div class="icono">{{ icono('recibo', 48) }}</div>
+            <p>Aún no tienes compras registradas.</p>
+            <a href="{{ url_for('main.productos') }}" class="btn btn-primary" style="margin-top:1rem;">Ver productos</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

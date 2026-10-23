@@ -1,0 +1,116 @@
+{# Formulario de alta y edicion de producto.
+   Los valores vienen siempre en `datos` (un diccionario que arma la ruta), no
+   del objeto Producto. Asi, cuando el guardado falla -por ejemplo porque el
+   codigo ya existe- se puede volver a pintar el formulario con lo que la
+   persona acababa de escribir, en vez de mandarla a llenarlo otra vez. #}
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}{{ 'Nuevo' if es_nuevo else 'Editar' }} producto — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container" style="max-width: 640px;">
+        <div class="section-head">
+            <div>
+                <h2>{{ 'Nuevo producto' if es_nuevo else 'Editar producto' }}</h2>
+                <p>Los datos se guardan directamente en la tabla <code>producto</code>.</p>
+            </div>
+            <a href="{{ url_for('admin.productos') }}" class="btn btn-outline">Cancelar</a>
+        </div>
+
+        <div class="card">
+            <form method="post" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="codigo">Código único</label>
+                        <input class="form-control" type="text" id="codigo" name="codigo" required
+                               maxlength="20" style="text-transform:uppercase;"
+                               value="{{ datos.codigo }}" />
+                        <small style="color:var(--text-low); font-size:0.78rem;">
+                            Identifica el producto en el catálogo. No puede repetirse: si ya existe
+                            otro producto con este código, la tienda rechaza el registro para no
+                            duplicarlo.
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input class="form-control" type="text" id="nombre" name="nombre" required
+                               value="{{ datos.nombre }}" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea class="form-control" id="descripcion" name="descripcion">{{ datos.descripcion }}</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="precio">Precio (COP)</label>
+                        <input class="form-control" type="number" step="0.01" min="0" id="precio" name="precio" required
+                               value="{{ datos.precio }}" />
+                    </div>
+                    <div class="form-group">
+                        <label for="stock">Stock</label>
+                        <input class="form-control" type="number" min="0" id="stock" name="stock" required
+                               value="{{ datos.stock }}" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_categoria">Categoría</label>
+                        <select class="form-control" id="id_categoria" name="id_categoria" required>
+                            {% for cat in categorias %}
+                            <option value="{{ cat.id_categoria }}" {{ 'selected' if datos.id_categoria == cat.id_categoria }}>{{ cat.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_proveedor">ID Proveedor</label>
+                        <input class="form-control" type="number" min="1" id="id_proveedor" name="id_proveedor" required
+                               value="{{ datos.id_proveedor }}" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Fotos del producto</label>
+
+                    {% if not es_nuevo and producto and producto.imagenes %}
+                    <div class="galeria-admin">
+                        {% for imagen in producto.imagenes %}
+                        <div class="galeria-admin-item{{ ' es-principal' if imagen.es_principal else '' }}">
+                            <img src="{{ imagen.ruta_imagen }}" alt="Foto de {{ producto.nombre }}"
+                                 onerror="this.onerror=null;this.src='{{ img_placeholder }}';" />
+                            {% if imagen.es_principal %}
+                            <span class="badge exito">Principal</span>
+                            {% else %}
+                            <form method="post" action="{{ url_for('admin.marcar_imagen_principal', id_producto=producto.id_producto, id_imagen=imagen.id_imagen) }}">
+                                <button type="submit" class="btn btn-outline btn-sm">Marcar principal</button>
+                            </form>
+                            {% endif %}
+                            <form method="post" action="{{ url_for('admin.eliminar_imagen_producto', id_producto=producto.id_producto, id_imagen=imagen.id_imagen) }}"
+                                  onsubmit="return confirm('¿Eliminar esta foto?');">
+                                <button type="submit" class="btn btn-danger btn-sm">{{ icono('basura', 14) }} Eliminar</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <input class="form-control" type="file" name="imagenes" accept="image/*" multiple
+                           style="margin-bottom:0.6rem;" data-preview-input="galeria-preview" />
+                    <div class="galeria-preview" id="galeria-preview" data-preview-container></div>
+                    <input class="form-control" type="url" name="url_imagen" placeholder="...o pega un enlace de Imgur (https://i.imgur.com/xxxx.jpg)" />
+                    <small style="color:var(--text-low); font-size:0.78rem;">
+                        Puedes subir varias fotos a la vez (png, jpg, jpeg, gif o webp, hasta 5&nbsp;MB
+                        cada una). La primera foto que reciba el producto queda como principal
+                        automáticamente; luego puedes cambiarla arriba. Para que el proyecto sea
+                        portable entre equipos (sin copiar archivos aparte), también puedes pegar un
+                        enlace de <a href="https://imgur.com/upload" target="_blank" rel="noopener" style="color:var(--azul);">Imgur</a>.
+                    </small>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">{{ 'Crear producto' if es_nuevo else 'Guardar cambios' }}</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

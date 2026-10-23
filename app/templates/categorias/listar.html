@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Categorías — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Categorías</h2>
+                <p>Navega por tipo de mascota.</p>
+            </div>
+        </div>
+        <div class="categoria-grid">
+            {% for cat in categorias %}
+            <a href="{{ url_for('main.productos', categoria=cat.id_categoria) }}" class="categoria-card">
+                <div class="icono">
+                    {% if cat.nombre == 'Perros' %}{{ icono('perro', 40) }}
+                    {% elif cat.nombre == 'Gatos' %}{{ icono('gato', 40) }}
+                    {% else %}{{ icono('huella', 40) }}{% endif %}
+                </div>
+                <h3>{{ cat.nombre }}</h3>
+                <p>Ver catálogo completo</p>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

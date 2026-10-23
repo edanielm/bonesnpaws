@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+{% block title %}Acerca de — Bones & Paws{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <h2>Acerca de Bones & Paws</h2>
+                <p>Una tienda pensada para el bienestar de tu mascota.</p>
+            </div>
+        </div>
+
+        <div class="card" style="max-width:760px; margin-bottom:1.5rem;">
+            <p style="color:var(--text-mid); margin-bottom:1rem;">
+                Bones & Paws nace para ofrecer a los hogares colombianos productos de calidad para
+                perros, gatos y otras mascotas: alimento, accesorios, higiene y cuidado diario, todo
+                curado y despachado desde un mismo lugar. Buscamos que comprar para tu mascota sea
+                tan simple y cercano como cuidarla.
+            </p>
+            <p style="color:var(--text-mid);">
+                Este es un proyecto académico: la tienda es ficticia y el catálogo está pensado para
+                explorar el proceso de compra completo, de principio a fin, sin que se procesen pagos
+                ni envíos reales.
+            </p>
+        </div>
+
+        <div class="categoria-grid" style="margin-bottom:1.5rem;">
+            <div class="categoria-card">
+                <div class="icono">{{ icono('huella', 32) }}</div>
+                <h3>Calidad ante todo</h3>
+                <p>Elegimos marcas confiables de alimento y cuidado para que tu mascota reciba lo mejor.</p>
+            </div>
+            <div class="categoria-card">
+                <div class="icono">{{ icono('caja', 32) }}</div>
+                <h3>Catálogo variado</h3>
+                <p>Alimento, accesorios y artículos de cuidado para perros, gatos y otras mascotas.</p>
+            </div>
+            <div class="categoria-card">
+                <div class="icono">{{ icono('escudo', 32) }}</div>
+                <h3>Compra sin sorpresas</h3>
+                <p>Sigue el estado de tu pedido y consulta cada factura desde tu perfil.</p>
+            </div>
+        </div>
+
+        {# Enlaces reales de la tienda. Van en tarjetas con el logo de cada
+           servicio para que se reconozcan de un vistazo, y abren en otra
+           pestana (rel="noopener" por seguridad: sin eso la pagina abierta
+           puede manipular a la que la abrio). #}
+        <div class="card" style="margin-bottom:1.5rem;">
+            <h3 style="margin-bottom:0.35rem;">Escríbenos o síguenos</h3>
+            <p style="color:var(--text-mid); margin-bottom:1.1rem;">
+                Respondemos dudas sobre pedidos y productos por correo, y publicamos novedades
+                en Instagram.
+            </p>
+            <div class="redes">
+                <a class="red red-gmail" href="mailto:{{ empresa.correo }}">
+                    <span class="red-logo">{{ icono('gmail', 22) }}</span>
+                    <span class="red-texto">
+                        <strong>Gmail</strong>
+                        <span>{{ empresa.correo }}</span>
+                    </span>
+                </a>
+                <a class="red red-instagram" href="https://www.instagram.com/{{ empresa.instagram }}/"
+                   target="_blank" rel="noopener noreferrer">
+                    <span class="red-logo">{{ icono('instagram', 22) }}</span>
+                    <span class="red-texto">
+                        <strong>Instagram</strong>
+                        <span>@{{ empresa.instagram }}</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="dato-lista">
+                <div class="dato">
+                    <div class="k">{{ icono('ubicacion', 14) }} Dirección</div>
+                    <div class="v">{{ empresa.direccion }}, {{ empresa.ciudad }}</div>
+                </div>
+                <div class="dato">
+                    <div class="k">{{ icono('telefono', 14) }} Teléfono</div>
+                    <div class="v"><a href="tel:{{ empresa.telefono | replace(' ', '') }}">{{ empresa.telefono }}</a></div>
+                </div>
+                <div class="dato">
+                    <div class="k">{{ icono('correo', 14) }} Correo</div>
+                    <div class="v"><a href="mailto:{{ empresa.correo }}">{{ empresa.correo }}</a></div>
+                </div>
+                <div class="dato">
+                    <div class="k">{{ icono('reloj', 14) }} Horario</div>
+                    <div class="v">{{ empresa.horario }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
