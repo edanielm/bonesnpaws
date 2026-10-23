@@ -921,3 +921,4 @@ delegan al servicio correspondiente y devuelven una respuesta.
   requiere sesión iniciada. Carrito, checkout, perfil e historial de compras
   sí están protegidos y redirigen al login si no hay sesión.
 "# Bones-And-Paws" 
+"# Bones-And-Paws" 
