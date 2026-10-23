@@ -69,6 +69,13 @@ class ImagenService:
     @staticmethod
     def _guardar_archivo(archivo):
         """Guarda el archivo subido en static/uploads/productos/ y devuelve su ruta publica."""
+        if current_app.config.get("EN_VERCEL"):
+            # En Vercel el disco es de solo lectura (y lo que se escribe en
+            # /tmp se pierde): la foto no sobreviviria. Se pide el enlace.
+            raise ValueError(
+                "En el sitio publicado no se pueden subir archivos: "
+                "pega el enlace directo de la imagen (ej. Imgur)."
+            )
         ImagenService._validar_archivo(archivo)
         nombre_seguro = secure_filename(archivo.filename)
         nombre_unico = f"{uuid.uuid4().hex}_{nombre_seguro}"

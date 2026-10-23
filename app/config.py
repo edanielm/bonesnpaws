@@ -5,6 +5,7 @@ Configuracion central de la aplicacion. Lee todo desde variables de entorno
 (.env) para no dejar credenciales ni secretos escritos en el codigo.
 """
 import os
+from urllib.parse import quote_plus
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -21,11 +22,24 @@ class Config:
     # use_pure=true: la extension en C de mysql-connector-python se cuelga
     # (access violation) al abrir conexion en Python 3.14 de Windows; la
     # implementacion pura en Python evita el problema.
+    #
+    # Usuario y contrasena van con quote_plus: las contrasenas que generan
+    # los MySQL en la nube (Aiven, TiDB...) suelen traer @, : o / y sin
+    # escaparlas rompen la URL.
     SQLALCHEMY_DATABASE_URI = (
-        f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}"
+        f"mysql+mysqlconnector://{quote_plus(DB_USER)}:{quote_plus(DB_PASSWORD)}"
         f"@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4&use_pure=true"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # En Vercel la funcion puede quedar dormida entre peticiones y el
+    # servidor MySQL cierra las conexiones inactivas: pool_pre_ping prueba
+    # la conexion antes de usarla y pool_recycle la renueva antes de que
+    # el servidor la corte. En local no estorba.
+    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True, "pool_recycle": 280}
+
+    # Vercel define VERCEL=1 en sus funciones. Alli el disco es de solo
+    # lectura, asi que las fotos no se pueden guardar como archivo.
+    EN_VERCEL = bool(os.getenv("VERCEL"))
 
     # ------------------------------------------------------------------
     # Correo saliente (recuperacion de contrasena)
