@@ -10,7 +10,8 @@
                 <h2>Panel administrador</h2>
                 <p>Hola, {{ admin_logueado }} — así van las ventas de la tienda.</p>
             </div>
-            <div style="display:flex; gap:0.8rem;">
+            <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+                <a href="{{ url_for('admin.reporte_ventas_excel') }}" class="btn btn-outline">{{ icono('descargar', 16) }} Reporte en Excel</a>
                 <a href="{{ url_for('admin.crear_producto') }}" class="btn btn-primary">{{ icono('mas', 16) }} Nuevo producto</a>
                 <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">{{ icono('salir', 16) }} Cerrar sesión</a>
             </div>

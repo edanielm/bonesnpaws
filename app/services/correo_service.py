@@ -34,11 +34,14 @@ def esta_configurado():
     return bool(cfg.get("MAIL_USUARIO") and cfg.get("MAIL_CONTRASENA"))
 
 
-def enviar(destinatario, asunto, texto, html=None):
+def enviar(destinatario, asunto, texto, html=None, adjuntos=None):
     """
     Manda un correo. 'texto' es la version en texto plano (obligatoria,
     es la que ven los lectores que no muestran HTML) y 'html' la version
     con formato, opcional.
+
+    'adjuntos' es una lista de (contenido_en_bytes, nombre_de_archivo,
+    tipo_mime), por ejemplo la factura en PDF.
 
     Levanta CorreoNoEnviado si el servidor rechaza el envio.
     """
@@ -49,7 +52,11 @@ def enviar(destinatario, asunto, texto, html=None):
         # *y* ademas fallar dejaria en pantalla un codigo que el servicio
         # acaba de invalidar.
         if cfg.get("MAIL_A_CONSOLA"):
-            _volcar_en_consola(destinatario, asunto, texto)
+            nombres = [nombre for _, nombre, _ in adjuntos or []]
+            _volcar_en_consola(
+                destinatario, asunto,
+                texto + (f"\n[Adjuntos: {', '.join(nombres)}]" if nombres else ""),
+            )
             return False
         raise CorreoNoEnviado(
             "El envio de correo no esta configurado en el servidor. "
@@ -68,6 +75,9 @@ def enviar(destinatario, asunto, texto, html=None):
     mensaje.set_content(texto)
     if html:
         mensaje.add_alternative(html, subtype="html")
+    for contenido, nombre, tipo_mime in adjuntos or []:
+        principal, secundario = tipo_mime.split("/", 1)
+        mensaje.add_attachment(contenido, maintype=principal, subtype=secundario, filename=nombre)
 
     try:
         _entregar(mensaje)

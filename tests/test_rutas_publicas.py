@@ -517,7 +517,143 @@ def test_la_factura_se_descarga_como_pdf(comprador):
     assert len(datos) > 1500                  # tiene contenido, no es una hoja vacia
 
 
-@pytest.mark.parametrize("ruta", ["/facturas/1", "/facturas/1/pdf"])
+def test_la_factura_se_descarga_como_word(comprador):
+    from docx import Document
+
+    r = comprador.get("/facturas/1/word")
+
+    assert r.status_code == 200
+    assert r.mimetype == (
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+    assert "factura-BP-000001.docx" in r.headers["Content-Disposition"]
+
+    # Que Word lo pueda abrir y que lleve lo esencial de la factura
+    doc = Document(io.BytesIO(r.get_data()))
+    texto = "\n".join(p.text for p in doc.paragraphs)
+    for tabla in doc.tables:
+        for fila in tabla.rows:
+            for celda in fila.cells:
+                texto += "\n" + celda.text
+                for anidada in celda.tables:
+                    texto += "\n" + "\n".join(c.text for f in anidada.rows for c in f.cells)
+    assert "BP-000001" in texto
+    assert "Laura Gomez" in texto
+    assert "Alimento premium perro 3kg" in texto
+    assert "TOTAL A PAGAR" in texto
+    assert "PESOS M/CTE" in texto
+
+
+@pytest.fixture
+def buzon(app, monkeypatch):
+    """Correo configurado, pero sin conexion SMTP: devuelve lo que habria salido."""
+    from app.services import correo_service
+
+    app.config.update(MAIL_USUARIO="tienda@correo.com", MAIL_CONTRASENA="clave")
+    mensajes = []
+    monkeypatch.setattr(correo_service, "_entregar", mensajes.append)
+    return mensajes
+
+
+@pytest.mark.parametrize("formato, adjunto", [
+    ("pdf", "factura-BP-000001.pdf"),
+    ("word", "factura-BP-000001.docx"),
+])
+def test_al_descargar_la_factura_le_llega_al_cliente_por_correo(comprador, buzon, formato, adjunto):
+    assert comprador.get(f"/facturas/1/{formato}").status_code == 200
+
+    assert len(buzon) == 1
+    mensaje = buzon[0]
+    assert mensaje["To"] == "laura@correo.com"
+    assert "BP-000001" in mensaje["Subject"]
+    assert [a.get_filename() for a in mensaje.iter_attachments()] == [adjunto]
+
+
+def test_si_la_descarga_el_equipo_no_se_le_manda_correo_al_cliente(admin, buzon):
+    assert admin.get("/facturas/1/pdf").status_code == 200
+    assert buzon == []
+
+
+def test_si_el_correo_falla_la_factura_se_descarga_igual(comprador, app, monkeypatch):
+    from app.services import correo_service
+
+    def rechazar(_mensaje):
+        raise OSError("sin conexion")
+
+    app.config.update(MAIL_USUARIO="tienda@correo.com", MAIL_CONTRASENA="clave")
+    monkeypatch.setattr(correo_service, "_entregar", rechazar)
+
+    r = comprador.get("/facturas/1/pdf")
+    assert r.status_code == 200
+    assert r.get_data().startswith(b"%PDF-")
+
+
+def test_el_cliente_descarga_sus_compras_en_excel(comprador):
+    from openpyxl import load_workbook
+
+    r = comprador.get("/facturas/historial/excel")
+
+    assert r.status_code == 200
+    assert r.mimetype == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    libro = load_workbook(io.BytesIO(r.get_data()))
+    assert libro.sheetnames == ["Mis compras", "Productos comprados"]
+
+    compras = list(libro["Mis compras"].iter_rows(min_row=2, values_only=True))
+    assert sorted(f[0] for f in compras) == ["BP-000001", "BP-000002"]
+    # Los montos van como numeros, para que se puedan sumar en Excel
+    assert sum(f[7] for f in compras) == pytest.approx(
+        (89000 + round(89000 * 0.19) + 8000) + (42000 + round(42000 * 0.19) + 8000)
+    )
+
+    productos = [f[3] for f in libro["Productos comprados"].iter_rows(min_row=2, values_only=True)]
+    assert sorted(productos) == ["Alimento premium perro 3kg", "Arena aglomerante gato 5kg"]
+
+
+def test_el_excel_de_compras_solo_trae_las_del_cliente(app):
+    from openpyxl import load_workbook
+
+    otro = app.test_client()
+    with otro.session_transaction() as s:
+        s["id_usuario"] = "1003"      # cliente sin compras
+    r = otro.get("/facturas/historial/excel")
+
+    assert r.status_code == 200
+    libro = load_workbook(io.BytesIO(r.get_data()))
+    assert libro["Mis compras"].max_row == 1   # solo el encabezado
+
+
+def test_el_excel_de_compras_pide_sesion(client):
+    assert client.get("/facturas/historial/excel").status_code in (302, 401)
+
+
+def test_el_administrador_descarga_el_reporte_de_ventas(admin):
+    from openpyxl import load_workbook
+
+    r = admin.get("/admin/reporte-ventas.xlsx")
+
+    assert r.status_code == 200
+    libro = load_workbook(io.BytesIO(r.get_data()))
+    assert libro.sheetnames == ["Resumen", "Facturas", "Detalle de ventas", "Productos", "Clientes"]
+
+    facturas = list(libro["Facturas"].iter_rows(min_row=2, values_only=True))
+    assert len(facturas) == 2
+    assert {f[3] for f in facturas} == {"Laura Gomez"}
+
+    clientes = {f[0]: f for f in libro["Clientes"].iter_rows(min_row=2, values_only=True)}
+    assert clientes["1001"][5] == 2     # compras
+    assert clientes["1003"][5] == 0
+
+    productos = {f[0]: f for f in libro["Productos"].iter_rows(min_row=2, values_only=True)}
+    assert productos["PER-0001"][6] == 1   # unidades vendidas
+    assert productos["GAT-0001"][6] == 2
+
+
+def test_el_vendedor_no_descarga_el_reporte_de_ventas(vendedor):
+    r = vendedor.get("/admin/reporte-ventas.xlsx")
+    assert r.status_code in (302, 403)
+
+
+@pytest.mark.parametrize("ruta", ["/facturas/1", "/facturas/1/pdf", "/facturas/1/word"])
 def test_nadie_mas_puede_ver_una_factura_ajena(app, ruta):
     """El numero de factura es un consecutivo: sin este control, se adivina."""
     otro = app.test_client()

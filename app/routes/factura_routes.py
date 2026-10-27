@@ -10,6 +10,8 @@ from app.extensions import db
 from app.services.factura_service import FacturaService
 from app.services.carrito_service import CarritoService
 from app.services.factura_pdf_service import FacturaPdfService
+from app.services.factura_word_service import FacturaWordService
+from app.services.excel_service import ExcelService
 from app.routes.decoradores import requiere_login
 
 factura_bp = Blueprint("factura", __name__, url_prefix="/facturas")
@@ -89,23 +91,93 @@ def detalle(numero_factura):
     return render_template("facturas/detalle.html", factura=factura, cliente=cliente)
 
 
-@factura_bp.route("/<int:numero_factura>/pdf")
-def descargar_pdf(numero_factura):
-    """Descarga la factura como PDF."""
-    factura, cliente = _factura_autorizada(numero_factura)
+MIME_PDF = "application/pdf"
+MIME_WORD = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+MIME_EXCEL = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
-    contenido, nombre_archivo = FacturaPdfService.generar(
+
+def _descargar_factura(numero_factura, generador, tipo_mime):
+    """
+    Genera la factura con `generador` (PDF o Word), se la manda por correo
+    al cliente y la entrega como descarga.
+
+    La copia por correo sale solo cuando quien descarga es el propio
+    cliente: si un empleado la baja desde el panel para consultarla, el
+    cliente no tiene por que recibir un correo que no pidio.
+    """
+    factura, cliente = _factura_autorizada(numero_factura)
+    cfg = current_app.config
+
+    contenido, nombre_archivo = generador(
         factura=factura,
         cliente=cliente,
-        empresa=current_app.config["EMPRESA"],
-        prefijo=current_app.config["FACTURA_PREFIJO"],
-        nota=current_app.config["FACTURA_NOTA"],
+        empresa=cfg["EMPRESA"],
+        prefijo=cfg["FACTURA_PREFIJO"],
+        nota=cfg["FACTURA_NOTA"],
         logo=os.path.join(current_app.static_folder, "img", "logo.png"),
     )
 
+    if factura.id_usuario == session.get("id_usuario") and "id_empleado" not in session:
+        _enviar_copia_al_cliente(factura, cliente, contenido, nombre_archivo, tipo_mime)
+
     return send_file(
         BytesIO(contenido),
-        mimetype="application/pdf",
+        mimetype=tipo_mime,
+        as_attachment=True,
+        download_name=nombre_archivo,
+    )
+
+
+def _enviar_copia_al_cliente(factura, cliente, contenido, nombre_archivo, tipo_mime):
+    """
+    Manda la factura al correo registrado del cliente. Si el correo falla
+    la descarga sigue igual: el cliente ya tiene su factura en la mano y un
+    error de SMTP no debe quitarsela.
+    """
+    from app.formato import folio, pesos
+    from app.services import correo_service
+
+    cfg = current_app.config
+    numero = folio(factura.numero_factura, cfg["FACTURA_PREFIJO"])
+    texto = (
+        f"Hola {cliente.nombre},\n\n"
+        f"Te enviamos una copia de tu factura {numero} del "
+        f"{factura.fecha:%d/%m/%Y} por {pesos(factura.total)}.\n"
+        f"La encuentras adjunta a este correo.\n\n"
+        f"¡Gracias por comprar en {cfg['EMPRESA']['nombre']}!\n"
+        f"{cfg['EMPRESA']['web']}"
+    )
+    try:
+        correo_service.enviar(
+            cliente.correo,
+            f"Tu factura {numero} — {cfg['EMPRESA']['nombre']}",
+            texto,
+            adjuntos=[(contenido, nombre_archivo, tipo_mime)],
+        )
+    except correo_service.CorreoNoEnviado as e:
+        current_app.logger.warning("Factura %s descargada pero no enviada por correo: %s", numero, e)
+
+
+@factura_bp.route("/<int:numero_factura>/pdf")
+def descargar_pdf(numero_factura):
+    """Descarga la factura como PDF (y se la manda al correo del cliente)."""
+    return _descargar_factura(numero_factura, FacturaPdfService.generar, MIME_PDF)
+
+
+@factura_bp.route("/<int:numero_factura>/word")
+def descargar_word(numero_factura):
+    """Descarga la factura como Word (y se la manda al correo del cliente)."""
+    return _descargar_factura(numero_factura, FacturaWordService.generar, MIME_WORD)
+
+
+@factura_bp.route("/historial/excel")
+@requiere_login
+def historial_excel():
+    """Las compras del cliente con sesion abierta, en Excel."""
+    contenido, nombre_archivo = ExcelService.compras_cliente(session["id_usuario"])
+    return send_file(
+        BytesIO(contenido),
+        mimetype=MIME_EXCEL,
         as_attachment=True,
         download_name=nombre_archivo,
     )

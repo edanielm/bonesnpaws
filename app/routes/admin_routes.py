@@ -13,12 +13,14 @@ aqui adentro es el rol del empleado:
     @requiere_admin -> solo Administrador (estadisticas, borrar cuentas)
 """
 from datetime import date
+from io import BytesIO
 
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash, session,
-    current_app,
+    current_app, send_file,
 )
 
+from app.services.excel_service import ExcelService
 from app.services.producto_service import ProductoService
 from app.services.imagen_service import ImagenService
 from app.services.admin_service import AdminService
@@ -52,6 +54,19 @@ def dashboard():
         metodos_pago=AdminService.ventas_por_metodo_pago(),
         top_productos=AdminService.top_productos(5),
         facturas=AdminService.facturas_recientes(10),
+    )
+
+
+@admin_bp.route("/reporte-ventas.xlsx")
+@requiere_admin
+def reporte_ventas_excel():
+    """Todo lo de ventas en un Excel: resumen, facturas, detalle, productos y clientes."""
+    contenido, nombre_archivo = ExcelService.reporte_ventas()
+    return send_file(
+        BytesIO(contenido),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=nombre_archivo,
     )
 
 

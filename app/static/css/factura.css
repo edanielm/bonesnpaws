@@ -142,6 +142,10 @@ table.doc-items .col-valor { width: 118px; text-align: right; white-space: nowra
     display: flex; gap: 0.8rem; flex-wrap: wrap;
     justify-content: center; margin-top: 1.8rem;
 }
+.doc-aviso-correo {
+    display: flex; gap: 0.4rem; align-items: center; justify-content: center;
+    margin-top: 0.9rem; font-size: 0.8rem; color: var(--text-low);
+}
 
 @media (max-width: 640px) {
     .documento { padding: 1.6rem 1.2rem; }
@@ -154,7 +158,7 @@ table.doc-items .col-valor { width: 118px; text-align: right; white-space: nowra
    ============================================================ */
 @media print {
     /* Fuera todo lo que es del sitio y no del documento */
-    .navbar, footer, .doc-acciones, .skip-link,
+    .navbar, footer, .doc-acciones, .doc-aviso-correo, .skip-link,
     #toast, #login-overlay, .alert, .section-head,
     /* El seguimiento del envio cambia con el tiempo; la factura impresa no */
     .seguimiento, #chatbot-widget {

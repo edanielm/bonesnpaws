@@ -10,6 +10,11 @@
                 <h2>Mis compras</h2>
                 <p>{{ facturas | length }} factura(s)</p>
             </div>
+            {% if facturas %}
+            <a href="{{ url_for('factura.historial_excel') }}" class="btn btn-outline">
+                {{ icono('descargar', 16) }} Descargar en Excel
+            </a>
+            {% endif %}
         </div>
 
         {% if facturas %}
@@ -53,6 +58,8 @@
                                    class="btn btn-outline btn-sm">{{ icono('ojo', 15) }} Ver factura</a>
                                 <a href="{{ url_for('factura.descargar_pdf', numero_factura=f.numero_factura) }}"
                                    class="btn btn-outline btn-sm">{{ icono('descargar', 15) }} PDF</a>
+                                <a href="{{ url_for('factura.descargar_word', numero_factura=f.numero_factura) }}"
+                                   class="btn btn-outline btn-sm">{{ icono('descargar', 15) }} Word</a>
                             </div>
                         </td>
                     </tr>
@@ -60,6 +67,9 @@
                 </tbody>
             </table>
         </div>
+        <p class="celda-nota" style="margin-top:0.8rem;">
+            {{ icono('correo', 13) }} Cada vez que descargas una factura también te llega una copia a tu correo registrado.
+        </p>
         {% else %}
         <div class="carrito-vacio">
             <div class="icono">{{ icono('recibo', 48) }}</div>

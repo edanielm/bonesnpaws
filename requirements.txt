@@ -19,6 +19,10 @@ Werkzeug>=3.0,<4.0
 # puro: se instala con pip en cualquier sistema operativo sin necesidad de
 # librerias externas (WeasyPrint, en cambio, exige instalar GTK en Windows).
 reportlab>=4.0,<5.0
+# La misma factura en Word, y los reportes de compras/ventas en Excel.
+# Ambas son Python puro, como ReportLab.
+python-docx>=1.1,<2.0
+openpyxl>=3.1,<4.0
 
 # Fotos de producto en el sitio publicado en Vercel (Vercel Blob). En local
 # no se usa: las fotos se guardan en app/static/uploads/.
