@@ -119,6 +119,10 @@ def _descargar_factura(numero_factura, generador, tipo_mime):
 
     if factura.id_usuario == session.get("id_usuario") and "id_empleado" not in session:
         _enviar_copia_al_cliente(factura, cliente, contenido, nombre_archivo, tipo_mime)
+    else:
+        current_app.logger.info(
+            "Factura %s descargada por el equipo: no se envia copia al cliente", numero_factura
+        )
 
     return send_file(
         BytesIO(contenido),
@@ -148,7 +152,7 @@ def _enviar_copia_al_cliente(factura, cliente, contenido, nombre_archivo, tipo_m
         f"{cfg['EMPRESA']['web']}"
     )
     try:
-        correo_service.enviar(
+        salio = correo_service.enviar(
             cliente.correo,
             f"Tu factura {numero} — {cfg['EMPRESA']['nombre']}",
             texto,
@@ -156,6 +160,9 @@ def _enviar_copia_al_cliente(factura, cliente, contenido, nombre_archivo, tipo_m
         )
     except correo_service.CorreoNoEnviado as e:
         current_app.logger.warning("Factura %s descargada pero no enviada por correo: %s", numero, e)
+        return
+    if salio:
+        current_app.logger.info("Factura %s enviada por correo a %s", numero, cliente.correo)
 
 
 @factura_bp.route("/<int:numero_factura>/pdf")

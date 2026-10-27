@@ -4,6 +4,8 @@ app/__init__.py
 Application factory. Crea y configura la instancia de Flask, inicializa
 SQLAlchemy y registra todos los Blueprints (rutas) del proyecto.
 """
+import logging
+
 from flask import Flask
 
 from app.config import Config
@@ -13,6 +15,10 @@ from app.extensions import db
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    # Por defecto Flask solo muestra avisos y errores; con INFO tambien
+    # quedan en el log (el de Vercel incluido) los envios de correo que
+    # salieron bien, para poder confirmar que salieron.
+    app.logger.setLevel(logging.INFO)
 
     db.init_app(app)
 
